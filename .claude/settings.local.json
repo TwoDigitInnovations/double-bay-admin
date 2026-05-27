@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls \"d:\\\\2-digit-Rishabh-Project\\\\CMS\\\\Backend\")",
+      "Read(//d/2-digit-Rishabh-Project/CMS/Backend/**)"
+    ]
+  }
+}
