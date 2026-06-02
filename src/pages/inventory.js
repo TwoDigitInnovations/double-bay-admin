@@ -1,10 +1,10 @@
 import { useEffect, useMemo } from "react";
 import { useRouter } from "next/router";
 import { useDispatch, useSelector } from "react-redux";
-import { Warehouse, Download, Upload, Search } from "lucide-react";
+import { Warehouse, Download, Upload, Search, Trash2 } from "lucide-react";
 import isAuth from "@/components/isAuth";
 import Table from "@/components/table";
-import { fetchProducts } from "@/redux/actions/productActions";
+import { deleteProductById, fetchProducts } from "@/redux/actions/productActions";
 
 // ── Custom cells ─────────────────────────────────────────────────────────────
 
@@ -66,7 +66,7 @@ function DotHeader({ label, title }) {
 
 // ── Columns ───────────────────────────────────────────────────────────────────
 
-const COLUMNS = [
+const COLUMNS = (onDelete) => [
   {
     Header: "Product",
     accessor: "name",
@@ -131,6 +131,24 @@ const COLUMNS = [
     accessor: "incoming",
     Cell: NumCell,
   },
+  {
+    Header: "",
+    id: "actions",
+    disableSortBy: true,
+    Cell: ({ row }) => (
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete?.(row.original?._id);
+        }}
+        className="p-2 text-red-500 hover:text-red-700"
+        aria-label="Delete"
+      >
+        <Trash2 size={16} />
+      </button>
+    ),
+  },
 ];
 
 // ── Empty state ───────────────────────────────────────────────────────────────
@@ -165,7 +183,18 @@ function Inventory() {
     dispatch(fetchProducts(router));
   }, [dispatch]);
 
-  const columns = useMemo(() => COLUMNS, []);
+  const handleDelete = async (id) => {
+    if (!id) return;
+    if (!window.confirm("Delete this product?")) return;
+    try {
+      const res = await dispatch(deleteProductById(id, router));
+      if (!res?.status) window.alert(res?.message || "Could not delete");
+    } catch (e) {
+      window.alert(e?.message || "Could not delete");
+    }
+  };
+
+  const columns = useMemo(() => COLUMNS(handleDelete), [products.length]);
 
   return (
     <div className="p-4 sm:p-6">

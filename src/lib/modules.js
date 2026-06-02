@@ -9,6 +9,7 @@ export const MODULE_IDS = {
   HOME: "home",
   ORDERS: "orders",
   PRODUCTS: "products",
+  PRODUCT_TAXONOMY: "product-taxonomy",
   COLLECTIONS: "collections",
   INVENTORY: "inventory",
   PURCHASE_ORDERS: "purchase-orders",
@@ -70,6 +71,7 @@ export function getModuleForPath(pathname = "") {
   if (path === "/settings") return MODULE_IDS.SETTINGS;
 
   if (path.startsWith("/orders")) return MODULE_IDS.ORDERS;
+  if (path.startsWith("/product-taxonomy")) return MODULE_IDS.PRODUCT_TAXONOMY;
   if (path.startsWith("/products")) return MODULE_IDS.PRODUCTS;
   if (path.startsWith("/collections")) return MODULE_IDS.COLLECTIONS;
   if (path.startsWith("/inventory")) return MODULE_IDS.INVENTORY;

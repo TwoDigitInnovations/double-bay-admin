@@ -30,6 +30,7 @@ import { isModuleEnabled, MODULE_IDS as M } from "@/lib/modules";
 
 const productsRoutes = [
   "/products",
+  "/product-taxonomy",
   "/collections",
   "/inventory",
   "/purchase-orders",
@@ -38,6 +39,7 @@ const productsRoutes = [
 ];
 
 const productsSubItems = [
+  { href: "/product-taxonomy", title: "Product Categories", module: M.PRODUCT_TAXONOMY },
   { href: "/collections", title: "Collections", module: M.COLLECTIONS },
   { href: "/inventory", title: "Inventory", module: M.INVENTORY },
   { href: "/purchase-orders", title: "Purchase orders", module: M.PURCHASE_ORDERS },
@@ -132,7 +134,7 @@ function SidePannel({ open, setOpen }) {
         </div>
 
         {/* Nav links */}
-        <nav className="flex-1 overflow-y-auto px-2 py-1 space-y-0.5 no-scrollbar">
+        <nav className="sidebar-scroll flex-1 min-h-0 overflow-y-auto px-2 py-1 space-y-0.5">
           <NavItem
             href="/"
             icon={Home}

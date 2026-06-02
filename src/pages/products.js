@@ -1,9 +1,9 @@
 import { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Download, Plus, Tag } from "lucide-react";
+import { Download, Plus, Tag, Trash2 } from "lucide-react";
 import isAuth from "@/components/isAuth";
 import Table, { AvatarCell, StatusPill } from "@/components/table";
-import { fetchProducts } from "@/redux/actions/productActions";
+import { deleteProductById, fetchProducts } from "@/redux/actions/productActions";
 import { useRouter } from "next/router";
 function InventoryCell({ row }) {
   const { trackInventory, stock, variants } = row.original;
@@ -27,7 +27,7 @@ function InventoryCell({ row }) {
   );
 }
 
-const COLUMNS = [
+const COLUMNS = (onDelete) => [
   {
     Header: "Product",
     accessor: "name",
@@ -69,6 +69,24 @@ const COLUMNS = [
     accessor: "vendor",
     Cell: ({ value }) => (
       <span className="text-sm text-gray-700">{value || ""}</span>
+    ),
+  },
+  {
+    Header: "",
+    id: "actions",
+    disableSortBy: true,
+    Cell: ({ row }) => (
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete?.(row.original?._id);
+        }}
+        className="p-2 text-red-500 hover:text-red-700"
+        aria-label="Delete"
+      >
+        <Trash2 size={16} />
+      </button>
     ),
   },
 ];
@@ -158,7 +176,20 @@ function Products() {
     dispatch(fetchProducts(router));
   }, [dispatch]);
 
-  const columns = useMemo(() => COLUMNS, []);
+  const handleDelete = async (id) => {
+    if (!id) return;
+    if (!window.confirm("Delete this product?")) return;
+    try {
+      const res = await dispatch(deleteProductById(id, router));
+      if (!res?.status) {
+        window.alert(res?.message || "Could not delete");
+      }
+    } catch (e) {
+      window.alert(e?.message || "Could not delete");
+    }
+  };
+
+  const columns = useMemo(() => COLUMNS(handleDelete), [products.length]);
 
   return (
     <div className="p-4 sm:p-6">

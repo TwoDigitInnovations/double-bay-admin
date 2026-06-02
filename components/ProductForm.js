@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import { useDispatch, useSelector } from "react-redux";
 import {
@@ -22,41 +22,61 @@ import {
   updateProductById,
 } from "@/redux/actions/productActions";
 import { fetchCollections } from "@/redux/actions/collectionActions";
+import { Api } from "@/services/service";
 
 // ── Product taxonomy ──────────────────────────────────────────────────────────
 
-const PRODUCT_CATEGORIES = [
-  { name: "Animals & Pet Supplies", children: ["Pet Food", "Pet Supplies", "Pet Grooming", "Pet Toys", "Live Animals", "Aquarium Supplies"] },
-  { name: "Apparel & Accessories", children: ["Clothing", "Shoes", "Jewelry", "Handbags & Wallets", "Accessories", "Watches", "Sunglasses"] },
-  { name: "Arts & Entertainment", children: ["Music", "Movies & TV", "Books & Literature", "Hobbies & Creative Arts", "Party Supplies", "Event Tickets"] },
-  { name: "Baby & Toddler", children: ["Baby Clothing", "Diapering", "Baby Feeding", "Nursery Furniture", "Baby Toys", "Baby Safety"] },
-  { name: "Business & Industrial", children: ["Office Furniture", "Industrial Tools", "Safety Equipment", "Packaging Materials", "Signage"] },
-  { name: "Cameras & Optics", children: ["Cameras", "Camera Lenses", "Tripods & Stands", "Camera Accessories", "Binoculars & Telescopes"] },
-  { name: "Electronics", children: ["Computers & Laptops", "Mobile Phones", "Audio Equipment", "TV & Video", "Wearable Technology", "Gaming", "Networking"] },
-  { name: "Food, Beverages & Tobacco", children: ["Food Items", "Beverages", "Tobacco Products"] },
-  { name: "Furniture", children: ["Bedroom Furniture", "Living Room Furniture", "Office Furniture", "Outdoor Furniture", "Storage Furniture"] },
-  { name: "Hardware", children: ["Building Materials", "Plumbing", "Electrical", "Hand Tools", "Power Tools", "Fasteners & Hardware"] },
-  { name: "Health & Beauty", children: ["Vitamins & Supplements", "Personal Care", "Cosmetics", "Medical Equipment", "Fragrances", "Hair Care"] },
-  { name: "Home & Garden", children: ["Kitchen & Dining", "Bedding", "Bath", "Garden & Outdoor", "Home Décor", "Lighting", "Cleaning Supplies"] },
-  { name: "Luggage & Bags", children: ["Travel Bags", "Backpacks", "Briefcases", "Purses", "Wallets", "Sports Bags"] },
-  { name: "Mature" },
-  { name: "Media", children: ["Books", "Magazines", "Music CDs", "DVDs & Blu-ray", "Video Games"] },
-  { name: "Office Supplies", children: ["Paper Products", "Pens & Pencils", "Filing & Organization", "Desk Accessories", "Labels & Stickers"] },
-  { name: "Religious & Ceremonial", children: ["Religious Décor", "Wedding Supplies", "Festive Decorations"] },
-  { name: "Software", children: ["Business Software", "Educational Software", "Design Software", "Security Software"] },
-  { name: "Sporting Goods", children: ["Exercise & Fitness", "Team Sports", "Outdoor Recreation", "Golf", "Water Sports", "Winter Sports"] },
-  { name: "Toys & Games", children: ["Action Figures", "Board Games", "Dolls & Stuffed Animals", "Puzzles", "Educational Toys", "Outdoor Toys"] },
-  { name: "Vehicles & Parts", children: ["Car Parts & Accessories", "Car Electronics", "Car Care", "Motorcycles & Scooters", "Boats"] },
-  { name: "Gift Cards" },
-  { name: "Uncategorized" },
-  { name: "Services", children: ["Consulting", "Repairs & Maintenance", "Subscriptions"] },
-  { name: "Product Add-Ons", children: ["Extended Warranty", "Assembly Service", "Installation Service"] },
-  { name: "Bundles" },
-];
+const TAXONOMY_GROUPS = {
+  product_type: "Product type",
+  skin_type: "Skin Type",
+  skin_concern: "Skin Concerns",
+  age: "Age",
+};
+
+function normalizeList(items) {
+  return (items || []).map((x) => (typeof x === "string" ? x : x?.value)).filter(Boolean);
+}
+
+function MultiSelect({ label, options, value, onChange, placeholder = "Select", single = false }) {
+  const selected = Array.isArray(value) ? value : [];
+  const toggle = (opt) => {
+    if (selected.includes(opt)) onChange([]);
+    else onChange(single ? [opt] : [...selected, opt]);
+  };
+
+  return (
+    <div>
+      <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
+      <div className="border border-gray-300 rounded-lg p-2 bg-white">
+        {options.length === 0 ? (
+          <div className="text-sm text-gray-400 px-1 py-2">{placeholder}</div>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {options.map((opt) => {
+              const on = selected.includes(opt);
+              return (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => toggle(opt)}
+                  className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
+                    on ? "bg-[#0A4D91] text-white" : "bg-[#f0f2f5] text-[#0A4D91] hover:bg-[#e6eaef]"
+                  }`}
+                >
+                  {opt}
+                </button>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
 
 // ── Category picker ───────────────────────────────────────────────────────────
 
-function CategoryPicker({ value, onChange }) {
+function CategoryPicker({ value, onChange, categories }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [parent, setParent] = useState(null);
@@ -86,8 +106,9 @@ function CategoryPicker({ value, onChange }) {
   };
 
   // When in search mode, flatten all categories + children
+  const source = Array.isArray(categories) ? categories : [];
   const searchResults = search.trim()
-    ? PRODUCT_CATEGORIES.flatMap((cat) => {
+    ? source.flatMap((cat) => {
         const matches = [];
         if (cat.name.toLowerCase().includes(search.toLowerCase())) matches.push(cat.name);
         (cat.children || []).forEach((child) => {
@@ -98,7 +119,7 @@ function CategoryPicker({ value, onChange }) {
       })
     : null;
 
-  const activeCategory = parent ? PRODUCT_CATEGORIES.find((c) => c.name === parent) : null;
+  const activeCategory = parent ? source.find((c) => c.name === parent) : null;
 
   return (
     <div className="relative" ref={ref}>
@@ -194,7 +215,7 @@ function CategoryPicker({ value, onChange }) {
               </>
             ) : (
               // Top-level list
-              PRODUCT_CATEGORIES.map((cat) => (
+              source.map((cat) => (
                 <button
                   key={cat.name}
                   onClick={() => cat.children ? setParent(cat.name) : select(cat.name)}
@@ -731,6 +752,10 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
     category: "",
     collection: "",
     brand: "",
+    productType: "",
+    skinType: "",
+    skinConcerns: [],
+    age: "",
     tags: [],
     weight: "",
     weightUnit: "kg",
@@ -747,6 +772,12 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
   });
   const [existingImages, setExistingImages] = useState([]);
   const [newImageFiles, setNewImageFiles] = useState([]);
+  const [taxonomy, setTaxonomy] = useState({
+    product_type: [],
+    skin_type: [],
+    skin_concern: [],
+    age: [],
+  });
   const [ready, setReady] = useState(!isEdit);
   const [pricingOpen, setPricingOpen] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
@@ -760,6 +791,25 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
 
   useEffect(() => {
     dispatch(fetchCollections(router));
+  }, []);
+
+  useEffect(() => {
+    const loadTaxonomy = async () => {
+      try {
+        const groups = Object.keys(TAXONOMY_GROUPS);
+        const results = await Promise.all(
+          groups.map((g) => Api("get", `product-taxonomy?group=${encodeURIComponent(g)}`, null, router)),
+        );
+        const next = {};
+        groups.forEach((g, i) => {
+          next[g] = normalizeList(results[i]?.data?.data || []);
+        });
+        setTaxonomy(next);
+      } catch {
+        setTaxonomy({ product_type: [], skin_type: [], skin_concern: [], age: [] });
+      }
+    };
+    loadTaxonomy();
   }, []);
 
   useEffect(() => {
@@ -780,6 +830,10 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
       category: typeof product.category === "string" ? product.category : (product.category?.name || ""),
       collection: product.collection?._id || product.collection || "",
       brand: product.brand || "",
+      productType: product.productType || "",
+      skinType: product.skinType || "",
+      skinConcerns: product.skinConcerns || [],
+      age: product.age || "",
       tags: product.tags || [],
       weight: product.weight ?? "",
       weightUnit: "kg",
@@ -821,6 +875,10 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
       toaster?.({ type: "error", message: "Product title is required" });
       return;
     }
+    if (!form.productType.trim()) {
+      toaster?.({ type: "error", message: "Product type is required" });
+      return;
+    }
     if (form.price === "" || form.price === null || form.price === undefined) {
       toaster?.({ type: "error", message: "Price is required" });
       return;
@@ -854,6 +912,12 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
       return;
     }
 
+    const totalImages = existingImages.length + newImageFiles.length;
+    if (totalImages < 2) {
+      toaster?.({ type: "error", message: "Please upload at least 2 images" });
+      return;
+    }
+
     const fd = new FormData();
     fd.append("name", form.name);
     fd.append("description", form.description);
@@ -867,9 +931,12 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
     fd.append("barcode", form.barcode);
     fd.append("continueSellingWhenOutOfStock", form.continueSellingWhenOutOfStock);
     fd.append("stock", form.stock);
-    if (form.category) fd.append("category", form.category);
     if (form.collection) fd.append("collection", form.collection);
     fd.append("brand", form.brand);
+    fd.append("productType", form.productType);
+    fd.append("skinType", form.skinType);
+    fd.append("age", form.age);
+    fd.append("skinConcerns", JSON.stringify(form.skinConcerns));
     fd.append("tags", JSON.stringify(form.tags));
     if (form.countryOfOrigin) fd.append("countryOfOrigin", form.countryOfOrigin);
     if (form.hsCode) fd.append("hsCode", form.hsCode);
@@ -971,13 +1038,62 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
             />
           </div>
 
-          {/* Category */}
-          <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">Category</h3>
-            <CategoryPicker value={form.category} onChange={(val) => set("category", val)} />
-            <p className="text-xs text-gray-400 mt-1.5">
-              Determines tax rates and adds metafields to improve search, filters, and cross-channel sales
-            </p>
+          {/* Product meta */}
+          <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+            <h3 className="text-sm font-semibold text-gray-900">Product meta</h3>
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Product type</label>
+                <select
+                  value={form.productType}
+                  onChange={(e) => set("productType", e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 outline-none focus:ring-1 focus:ring-gray-400 bg-white"
+                >
+                  <option value="">Select</option>
+                  {taxonomy.product_type.map((opt) => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Skin Type</label>
+                <select
+                  value={form.skinType}
+                  onChange={(e) => set("skinType", e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 outline-none focus:ring-1 focus:ring-gray-400 bg-white"
+                >
+                  <option value="">Select</option>
+                  {taxonomy.skin_type.map((opt) => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-gray-600 mb-1">Age</label>
+                <select
+                  value={form.age}
+                  onChange={(e) => set("age", e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 outline-none focus:ring-1 focus:ring-gray-400 bg-white"
+                >
+                  <option value="">Select</option>
+                  {taxonomy.age.map((opt) => (
+                    <option key={opt} value={opt}>{opt}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <MultiSelect
+              label="Skin Concerns"
+              options={taxonomy.skin_concern}
+              value={form.skinConcerns}
+              onChange={(val) => set("skinConcerns", val)}
+              placeholder="Add options in Product Categories"
+              single
+            />
           </div>
 
           {/* Pricing */}

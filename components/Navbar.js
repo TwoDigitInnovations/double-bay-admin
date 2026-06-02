@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useMemo } from "react";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { FiMenu, FiBell, FiSearch, FiX } from "react-icons/fi";
 import { useSelector, useDispatch } from "react-redux";
 import { useRouter } from "next/router";
@@ -27,6 +27,9 @@ import {
   Gift,
 } from "lucide-react";
 import Link from "next/link";
+import {
+  fetchUnreadNotificationCount,
+} from "@/services/notificationService";
 import LogoutModal from "./LogoutModal";
 import {
   filterRoutesByModules,
@@ -70,6 +73,7 @@ export default function Navbar({ setOpen }) {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(-1);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const dropdownRef = useRef(null);
   const searchRef = useRef(null);
@@ -82,6 +86,37 @@ export default function Navbar({ setOpen }) {
         r.title.toLowerCase().includes(searchQuery.toLowerCase()),
       )
     : defaultRoutes;
+
+  const refreshUnreadCount = useCallback(() => {
+    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    if (!token) {
+      setUnreadCount(0);
+      return;
+    }
+    fetchUnreadNotificationCount()
+      .then((res) => {
+        const count = res?.data?.data?.unreadCount ?? res?.data?.unreadCount ?? 0;
+        setUnreadCount(Number(count) || 0);
+      })
+      .catch(() => setUnreadCount(0));
+  }, []);
+
+  useEffect(() => {
+    refreshUnreadCount();
+    const onUpdate = () => refreshUnreadCount();
+    window.addEventListener("admin-notifications-updated", onUpdate);
+    const interval = setInterval(refreshUnreadCount, 45000);
+    return () => {
+      window.removeEventListener("admin-notifications-updated", onUpdate);
+      clearInterval(interval);
+    };
+  }, [refreshUnreadCount]);
+
+  useEffect(() => {
+    if (router.pathname === "/notifications") {
+      refreshUnreadCount();
+    }
+  }, [router.pathname, refreshUnreadCount]);
 
   /* ── outside click: user dropdown ── */
   useEffect(() => {
@@ -278,9 +313,18 @@ export default function Navbar({ setOpen }) {
 
       {/* Right — actions + avatar */}
       <div className="ml-auto flex items-center gap-1 shrink-0">
-        <button className="text-gray-300 hover:text-white p-2 rounded-lg hover:bg-white/10 transition-colors">
+        <Link
+          href="/notifications"
+          className="relative text-gray-300 hover:text-white p-2 rounded-lg hover:bg-white/10 transition-colors"
+          aria-label="Notifications"
+        >
           <FiBell size={16} />
-        </button>
+          {unreadCount > 0 && (
+            <span className="absolute right-1 top-1 flex min-w-[16px] h-4 items-center justify-center rounded-full bg-[#ec4899] px-1 text-[9px] font-bold text-white leading-none">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
+        </Link>
 
         {/* Avatar + dropdown */}
         <div className="relative" ref={dropdownRef}>
