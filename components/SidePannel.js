@@ -10,6 +10,9 @@ import {
   TrendingUp,
   Percent,
   FileText,
+  Scale,
+  BookOpen,
+  Layers,
   Globe,
   Landmark,
   BarChart2,
@@ -231,6 +234,33 @@ function SidePannel({ open, setOpen }) {
               icon={FileText}
               title="Content"
               active={pathname === "/content"}
+              onClick={close}
+            />
+          )}
+          {isModuleEnabled(M.LEGAL_PAGES) && (
+            <NavItem
+              href="/legal-pages"
+              icon={Scale}
+              title="Legal pages"
+              active={pathname === "/legal-pages"}
+              onClick={close}
+            />
+          )}
+          {isModuleEnabled(M.LEARN) && (
+            <NavItem
+              href="/learn"
+              icon={BookOpen}
+              title="Learn"
+              active={pathname === "/learn" || pathname.startsWith("/learn/")}
+              onClick={close}
+            />
+          )}
+          {isModuleEnabled(M.SHOP_CONCERNS) && (
+            <NavItem
+              href="/shop-concerns"
+              icon={Layers}
+              title="Shop concerns"
+              active={pathname === "/shop-concerns" || pathname.startsWith("/shop-concerns/")}
               onClick={close}
             />
           )}

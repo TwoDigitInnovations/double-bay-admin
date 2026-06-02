@@ -58,3 +58,33 @@ body {
   pointer-events: none;
   height: 0;
 }
+
+.jodit-editor-wrap .jodit-wysiwyg,
+.jodit-editor-wrap .jodit-wysiwyg p,
+.jodit-editor-wrap .jodit-wysiwyg li,
+.jodit-editor-wrap .jodit-wysiwyg h1,
+.jodit-editor-wrap .jodit-wysiwyg h2,
+.jodit-editor-wrap .jodit-wysiwyg h3,
+.jodit-editor-wrap .jodit-wysiwyg h4,
+.jodit-editor-wrap .jodit-wysiwyg span,
+.jodit-editor-wrap .jodit-wysiwyg strong {
+  color: #374151;
+}
+
+.jodit-editor-wrap .jodit-placeholder {
+  color: #9ca3af;
+}
+
+@media (prefers-color-scheme: dark) {
+  .jodit-editor-wrap .jodit-wysiwyg,
+  .jodit-editor-wrap .jodit-wysiwyg p,
+  .jodit-editor-wrap .jodit-wysiwyg li,
+  .jodit-editor-wrap .jodit-wysiwyg h1,
+  .jodit-editor-wrap .jodit-wysiwyg h2,
+  .jodit-editor-wrap .jodit-wysiwyg h3,
+  .jodit-editor-wrap .jodit-wysiwyg h4,
+  .jodit-editor-wrap .jodit-wysiwyg span,
+  .jodit-editor-wrap .jodit-wysiwyg strong {
+    color: #374151 !important;
+  }
+}

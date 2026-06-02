@@ -14,7 +14,7 @@ function mediaSrc(path) {
   return path;
 }
 
-export default function HomeContentPanel({ toaster }) {
+export default function HomeContentPanel({ toaster, embedded = false }) {
   const router = useRouter();
   const [tab, setTab] = useState("hero");
   const [items, setItems] = useState([]);
@@ -117,13 +117,17 @@ export default function HomeContentPanel({ toaster }) {
   };
 
   return (
-    <div className="p-4 sm:p-6 max-w-5xl">
-      <h1 className="text-lg font-semibold text-gray-900">Homepage content</h1>
-      <p className="mt-1 text-sm text-gray-500">
-        Manage hero carousel images and brand logos shown on the storefront home page.
-      </p>
+    <div className={embedded ? "" : "p-4 sm:p-6 max-w-5xl"}>
+      {!embedded && (
+        <>
+          <h1 className="text-lg font-semibold text-gray-900">Homepage content</h1>
+          <p className="mt-1 text-sm text-gray-500">
+            Manage hero carousel images and brand logos shown on the storefront home page.
+          </p>
+        </>
+      )}
 
-      <div className="mt-5 flex gap-2 border-b border-gray-200">
+      <div className={`flex gap-2 border-b border-gray-200 ${embedded ? "mt-0" : "mt-5"}`}>
         {TABS.map((t) => (
           <button
             key={t.id}
@@ -160,7 +164,7 @@ export default function HomeContentPanel({ toaster }) {
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                className="mt-1 w-full border text-gray-700 border-gray-300 rounded-lg px-3 py-2 text-sm"
                 placeholder="Admin label only — not shown on site"
               />
             </div>
@@ -172,7 +176,7 @@ export default function HomeContentPanel({ toaster }) {
               min={0}
               value={position}
               onChange={(e) => setPosition(Number(e.target.value) || 0)}
-              className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+              className="mt-1 w-full text-gray-700 border border-gray-300 rounded-lg px-3 py-2 text-sm"
             />
           </div>
         </div>
@@ -188,7 +192,7 @@ export default function HomeContentPanel({ toaster }) {
           <input
             value={link}
             onChange={(e) => setLink(e.target.value)}
-            className="mt-1 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+            className="mt-1 w-full border text-gray-700 border-gray-300 rounded-lg px-3 py-2 text-sm"
             placeholder="https://"
           />
         </div>
