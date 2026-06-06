@@ -83,11 +83,11 @@ export default function HomeContentPanel({ toaster, embedded = false }) {
     setSaving(true);
     try {
       const fd = new FormData();
-      if (title.trim()) fd.append("title", title.trim());
+      if (title?.trim?.()) fd.append("title", title.trim());
       if (!editingId) fd.append("type", tab);
-      fd.append("position", String(position));
+      fd.append("position", String(position || 0));
       if (!editingId) fd.append("status", "active");
-      if (link.trim()) fd.append("link", link.trim());
+      if (link?.trim?.()) fd.append("link", link.trim());
       if (imageFile) fd.append("image", imageFile);
 
       const method = editingId ? "put" : "post";
@@ -102,9 +102,11 @@ export default function HomeContentPanel({ toaster, embedded = false }) {
         resetForm();
         loadItems();
       } else {
+        console.error("API Error:", res);
         toaster?.({ type: "error", message: res?.message || "Could not save" });
       }
     } catch (err) {
+      console.error("Request Error:", err);
       toaster?.({ type: "error", message: err?.message || "Could not save" });
     } finally {
       setSaving(false);
