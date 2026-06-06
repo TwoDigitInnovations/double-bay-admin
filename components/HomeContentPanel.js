@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { ImagePlus, Trash2, ToggleLeft, ToggleRight } from "lucide-react";
+import { ImagePlus, Trash2, ToggleLeft, ToggleRight, Edit } from "lucide-react";
 import { Api, ApiFormData } from "@/services/service";
 
 const TABS = [
@@ -25,6 +25,7 @@ export default function HomeContentPanel({ toaster, embedded = false }) {
   const [position, setPosition] = useState(0);
   const [imageFile, setImageFile] = useState(null);
   const [preview, setPreview] = useState("");
+  const [editingId, setEditingId] = useState(null);
 
   const loadItems = useCallback(async () => {
     setLoading(true);
@@ -53,6 +54,16 @@ export default function HomeContentPanel({ toaster, embedded = false }) {
     setPosition(0);
     setImageFile(null);
     setPreview("");
+    setEditingId(null);
+  };
+
+  const handleEdit = (item) => {
+    setEditingId(item._id);
+    setTitle(item.title || "");
+    setLink(item.link || "");
+    setPosition(item.position ?? 0);
+    setPreview(mediaSrc(item.image));
+    setImageFile(null);
   };
 
   const onFileChange = (e) => {
@@ -64,7 +75,7 @@ export default function HomeContentPanel({ toaster, embedded = false }) {
 
   const handleCreate = async (e) => {
     e.preventDefault();
-    if (!imageFile) {
+    if (!editingId && !imageFile) {
       toaster?.({ type: "error", message: "Image is required" });
       return;
     }
@@ -73,15 +84,21 @@ export default function HomeContentPanel({ toaster, embedded = false }) {
     try {
       const fd = new FormData();
       if (title.trim()) fd.append("title", title.trim());
-      fd.append("type", tab);
+      if (!editingId) fd.append("type", tab);
       fd.append("position", String(position));
-      fd.append("status", "active");
+      if (!editingId) fd.append("status", "active");
       if (link.trim()) fd.append("link", link.trim());
-      fd.append("image", imageFile);
+      if (imageFile) fd.append("image", imageFile);
 
-      const res = await ApiFormData("post", "banners", fd, router);
+      const method = editingId ? "put" : "post";
+      const endpoint = editingId ? `banners/${editingId}` : "banners";
+      const res = await ApiFormData(method, endpoint, fd, router);
+
       if (res?.status) {
-        toaster?.({ type: "success", message: "Saved successfully" });
+        toaster?.({
+          type: "success",
+          message: editingId ? "Updated successfully" : "Saved successfully"
+        });
         resetForm();
         loadItems();
       } else {
@@ -151,9 +168,20 @@ export default function HomeContentPanel({ toaster, embedded = false }) {
         onSubmit={handleCreate}
         className="mt-6 bg-white rounded-xl border border-gray-200 p-5 space-y-4"
       >
-        <h2 className="text-sm font-semibold text-gray-900">
-          Add {tab === "hero" ? "hero slide" : "brand logo"}
-        </h2>
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-gray-900">
+            {editingId ? "Edit" : "Add"} {tab === "hero" ? "hero slide" : "brand logo"}
+          </h2>
+          {editingId && (
+            <button
+              type="button"
+              onClick={() => resetForm()}
+              className="text-xs text-gray-500 hover:text-gray-700"
+            >
+              Cancel
+            </button>
+          )}
+        </div>
 
         <div className={tab === "brand" ? "max-w-xs" : "grid gap-4 sm:grid-cols-2"}>
           {tab === "hero" && (
@@ -223,7 +251,7 @@ export default function HomeContentPanel({ toaster, embedded = false }) {
           disabled={saving}
           className="bg-gray-900 hover:bg-gray-800 disabled:opacity-50 text-white text-sm font-medium px-5 py-2 rounded-lg"
         >
-          {saving ? "Saving…" : "Add"}
+          {saving ? "Saving…" : editingId ? "Update" : "Add"}
         </button>
       </form>
 
@@ -261,6 +289,14 @@ export default function HomeContentPanel({ toaster, embedded = false }) {
                   </p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => handleEdit(item)}
+                    className="p-2 text-gray-500 hover:text-gray-800"
+                    title="Edit"
+                  >
+                    <Edit size={18} />
+                  </button>
                   <button
                     type="button"
                     onClick={() => handleToggle(item._id)}
