@@ -30,7 +30,12 @@ export default function HomeContentPanel({ toaster, embedded = false }) {
   const loadItems = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await Api("get", `banners?type=${tab}&limit=50&sort=position`, "", router);
+      const res = await Api(
+        "get",
+        `banners?type=${tab}&limit=50&sort=position`,
+        "",
+        router,
+      );
       if (res?.status) {
         setItems(res.data?.data || []);
       } else {
@@ -97,7 +102,7 @@ export default function HomeContentPanel({ toaster, embedded = false }) {
       if (res?.status) {
         toaster?.({
           type: "success",
-          message: editingId ? "Updated successfully" : "Saved successfully"
+          message: editingId ? "Updated successfully" : "Saved successfully",
         });
         resetForm();
         loadItems();
@@ -118,7 +123,10 @@ export default function HomeContentPanel({ toaster, embedded = false }) {
       const res = await Api("patch", `banners/${id}/toggle`, {}, router);
       if (res?.status) loadItems();
     } catch (err) {
-      toaster?.({ type: "error", message: err?.message || "Could not update status" });
+      toaster?.({
+        type: "error",
+        message: err?.message || "Could not update status",
+      });
     }
   };
 
@@ -139,14 +147,19 @@ export default function HomeContentPanel({ toaster, embedded = false }) {
     <div className={embedded ? "" : "p-4 sm:p-6 max-w-5xl"}>
       {!embedded && (
         <>
-          <h1 className="text-lg font-semibold text-gray-900">Homepage content</h1>
+          <h1 className="text-lg font-semibold text-gray-900">
+            Homepage content
+          </h1>
           <p className="mt-1 text-sm text-gray-500">
-            Manage hero carousel images and brand logos shown on the storefront home page.
+            Manage hero carousel images and brand logos shown on the storefront
+            home page.
           </p>
         </>
       )}
 
-      <div className={`flex gap-2 border-b border-gray-200 ${embedded ? "mt-0" : "mt-5"}`}>
+      <div
+        className={`flex gap-2 border-b border-gray-200 ${embedded ? "mt-0" : "mt-5"}`}
+      >
         {TABS.map((t) => (
           <button
             key={t.id}
@@ -172,7 +185,8 @@ export default function HomeContentPanel({ toaster, embedded = false }) {
       >
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-gray-900">
-            {editingId ? "Edit" : "Add"} {tab === "hero" ? "hero slide" : "brand logo"}
+            {editingId ? "Edit" : "Add"}{" "}
+            {tab === "hero" ? "hero slide" : "brand logo"}
           </h2>
           {editingId && (
             <button
@@ -185,11 +199,14 @@ export default function HomeContentPanel({ toaster, embedded = false }) {
           )}
         </div>
 
-        <div className={tab === "brand" ? "max-w-xs" : "grid gap-4 sm:grid-cols-2"}>
+        <div
+          className={tab === "brand" ? "max-w-xs" : "grid gap-4 sm:grid-cols-2"}
+        >
           {tab === "hero" && (
             <div>
               <label className="text-xs font-medium text-gray-700">
-                Title <span className="font-normal text-gray-400">(optional)</span>
+                Title{" "}
+                <span className="font-normal text-gray-400">(optional)</span>
               </label>
               <input
                 value={title}
@@ -200,7 +217,9 @@ export default function HomeContentPanel({ toaster, embedded = false }) {
             </div>
           )}
           <div>
-            <label className="text-xs font-medium text-gray-700">Sort order</label>
+            <label className="text-xs font-medium text-gray-700">
+              Sort order
+            </label>
             <input
               type="number"
               min={0}
@@ -218,7 +237,9 @@ export default function HomeContentPanel({ toaster, embedded = false }) {
         )}
 
         <div>
-          <label className="text-xs font-medium text-gray-700">Link (optional)</label>
+          <label className="text-xs font-medium text-gray-700">
+            Link (optional)
+          </label>
           <input
             value={link}
             onChange={(e) => setLink(e.target.value)}
@@ -236,10 +257,17 @@ export default function HomeContentPanel({ toaster, embedded = false }) {
             ) : (
               <>
                 <ImagePlus size={24} className="text-gray-400" />
-                <span className="text-xs text-gray-500">Click to upload image</span>
+                <span className="text-xs text-gray-500">
+                  Click to upload image
+                </span>
               </>
             )}
-            <input type="file" accept="image/*" className="hidden" onChange={onFileChange} />
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={onFileChange}
+            />
           </label>
           <p className="mt-1 text-xs text-gray-400">
             {tab === "hero"
@@ -259,7 +287,9 @@ export default function HomeContentPanel({ toaster, embedded = false }) {
 
       <div className="mt-8 bg-white rounded-xl border border-gray-200 overflow-hidden">
         <div className="px-5 py-3 border-b border-gray-100">
-          <h2 className="text-sm font-semibold text-gray-900">Published items</h2>
+          <h2 className="text-sm font-semibold text-gray-900">
+            Published items
+          </h2>
         </div>
 
         {loading ? (
@@ -267,7 +297,9 @@ export default function HomeContentPanel({ toaster, embedded = false }) {
             <div className="w-6 h-6 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
           </div>
         ) : items.length === 0 ? (
-          <p className="py-10 text-center text-sm text-gray-500">No items yet.</p>
+          <p className="py-10 text-center text-sm text-gray-500">
+            No items yet.
+          </p>
         ) : (
           <ul className="divide-y divide-gray-100">
             {items.map((item) => (
@@ -284,7 +316,8 @@ export default function HomeContentPanel({ toaster, embedded = false }) {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">
-                    {item.title?.trim() || (tab === "brand" ? "Logo image" : "Hero slide")}
+                    {item.title?.trim() ||
+                      (tab === "brand" ? "Logo image" : "Hero slide")}
                   </p>
                   <p className="text-xs text-gray-500">
                     Order: {item.position ?? 0} · {item.status}

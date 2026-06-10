@@ -55,6 +55,7 @@ export default function LegalPagesPanel({ toaster }) {
 
   const handleSave = async () => {
     const page = pagesBySlug[activeSlug];
+    
     if (!page?._id) {
       toaster?.({ type: "error", message: "Page not found. Refresh and try again." });
       return;

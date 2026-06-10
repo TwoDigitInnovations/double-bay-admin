@@ -39,10 +39,18 @@ const productsRoutes = [
 ];
 
 const productsSubItems = [
-  { href: "/product-taxonomy", title: "Product Categories", module: M.PRODUCT_TAXONOMY },
+  {
+    href: "/product-taxonomy",
+    title: "Product Categories",
+    module: M.PRODUCT_TAXONOMY,
+  },
   { href: "/collections", title: "Collections", module: M.COLLECTIONS },
   { href: "/inventory", title: "Inventory", module: M.INVENTORY },
-  { href: "/purchase-orders", title: "Purchase orders", module: M.PURCHASE_ORDERS },
+  {
+    href: "/purchase-orders",
+    title: "Purchase orders",
+    module: M.PURCHASE_ORDERS,
+  },
   { href: "/transfers", title: "Transfers", module: M.TRANSFERS },
   { href: "/gift-cards", title: "Gift cards", module: M.GIFT_CARDS },
 ];
@@ -262,7 +270,10 @@ function SidePannel({ open, setOpen }) {
               href="/shop-concerns"
               icon={Layers}
               title="Shop concerns"
-              active={pathname === "/shop-concerns" || pathname.startsWith("/shop-concerns/")}
+              active={
+                pathname === "/shop-concerns" ||
+                pathname.startsWith("/shop-concerns/")
+              }
               onClick={close}
             />
           )}
@@ -296,34 +307,34 @@ function SidePannel({ open, setOpen }) {
 
           {isModuleEnabled(M.ONLINE_STORE) && (
             <>
-          <div className="my-2 border-t border-gray-300/60" />
+              <div className="my-2 border-t border-gray-300/60" />
 
-          {/* Sales channels */}
-          <button
-            className="w-full flex items-center justify-between px-2.5 py-1.75 rounded-lg text-[13px] font-semibold text-gray-700 hover:bg-black/8 transition-colors"
-            onClick={() => setSalesOpen((v) => !v)}
-          >
-            Sales channels
-            <ChevronRight
-              size={14}
-              className={`text-gray-500 transition-transform duration-200 ${salesOpen ? "rotate-90" : ""}`}
-            />
-          </button>
-
-          {salesOpen && (
-            <div className="space-y-0.5">
-              {salesChannelItems.map((item) => (
-                <NavItem
-                  key={item.href}
-                  href={item.href}
-                  icon={item.icon}
-                  title={item.title}
-                  active={pathname === item.href}
-                  onClick={close}
+              {/* Sales channels */}
+              <button
+                className="w-full flex items-center justify-between px-2.5 py-1.75 rounded-lg text-[13px] font-semibold text-gray-700 hover:bg-black/8 transition-colors"
+                onClick={() => setSalesOpen((v) => !v)}
+              >
+                Sales channels
+                <ChevronRight
+                  size={14}
+                  className={`text-gray-500 transition-transform duration-200 ${salesOpen ? "rotate-90" : ""}`}
                 />
-              ))}
-            </div>
-          )}
+              </button>
+
+              {salesOpen && (
+                <div className="space-y-0.5">
+                  {salesChannelItems.map((item) => (
+                    <NavItem
+                      key={item.href}
+                      href={item.href}
+                      icon={item.icon}
+                      title={item.title}
+                      active={pathname === item.href}
+                      onClick={close}
+                    />
+                  ))}
+                </div>
+              )}
             </>
           )}
         </nav>

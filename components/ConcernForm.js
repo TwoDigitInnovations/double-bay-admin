@@ -102,7 +102,10 @@ export default function ConcernForm({ mode = "create", id, toaster, loader }) {
           : await ApiFormData("post", "concerns/", fd, router);
 
       if (res?.status) {
-        toaster?.({ type: "success", message: mode === "edit" ? "Updated" : "Created" });
+        toaster?.({
+          type: "success",
+          message: mode === "edit" ? "Updated" : "Created",
+        });
         router.push("/shop-concerns");
       } else {
         toaster?.({ type: "error", message: res?.message || "Could not save" });
@@ -121,19 +124,24 @@ export default function ConcernForm({ mode = "create", id, toaster, loader }) {
           Shop concerns
         </Link>
         <span>/</span>
-        <span className="text-gray-900">{mode === "edit" ? "Edit" : "New"}</span>
+        <span className="text-gray-900">
+          {mode === "edit" ? "Edit" : "New"}
+        </span>
       </div>
 
       <h1 className="text-lg font-semibold text-gray-900">
         {mode === "edit" ? "Edit shop concern" : "New shop concern"}
       </h1>
       <p className="mt-1 text-sm text-gray-500">
-        Homepage grid image, hero image, and full article (Jodit) for the detail page.
+        Homepage grid image, hero image, and full article (Jodit) for the detail
+        page.
       </p>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-5">
         <div>
-          <label className="text-xs font-medium text-gray-700">Title (hero card)</label>
+          <label className="text-xs font-medium text-gray-700">
+            Title (hero card)
+          </label>
           <input
             value={title}
             onChange={(e) => setTitle(e.target.value)}
@@ -152,7 +160,9 @@ export default function ConcernForm({ mode = "create", id, toaster, loader }) {
             />
           </div>
           <div>
-            <label className="text-xs font-medium text-gray-700">Sort order</label>
+            <label className="text-xs font-medium text-gray-700">
+              Sort order
+            </label>
             <input
               type="number"
               value={position}
@@ -185,7 +195,9 @@ export default function ConcernForm({ mode = "create", id, toaster, loader }) {
         </label>
 
         <div>
-          <label className="text-xs font-medium text-gray-700">Grid image (homepage)</label>
+          <label className="text-xs font-medium text-gray-700">
+            Grid image (homepage)
+          </label>
           <input
             type="file"
             accept="image/*"
@@ -198,12 +210,18 @@ export default function ConcernForm({ mode = "create", id, toaster, loader }) {
             className="mt-1 block w-full text-sm text-gray-700"
           />
           {cardPreview ? (
-            <img src={cardPreview} alt="" className="mt-3 h-32 rounded-lg border object-cover" />
+            <img
+              src={cardPreview}
+              alt=""
+              className="mt-3 h-32 rounded-lg border object-cover"
+            />
           ) : null}
         </div>
 
         <div>
-          <label className="text-xs font-medium text-gray-700">Hero image (detail page)</label>
+          <label className="text-xs font-medium text-gray-700">
+            Hero image (detail page)
+          </label>
           <input
             type="file"
             accept="image/*"
@@ -216,15 +234,27 @@ export default function ConcernForm({ mode = "create", id, toaster, loader }) {
             className="mt-1 block w-full text-sm text-gray-700"
           />
           {heroPreview ? (
-            <img src={heroPreview} alt="" className="mt-3 h-40 rounded-2xl border object-cover" />
+            <img
+              src={heroPreview}
+              alt=""
+              className="mt-3 h-40 rounded-2xl border object-cover"
+            />
           ) : null}
-          <p className="mt-1 text-xs text-gray-400">Leave empty to use grid image on detail page.</p>
+          <p className="mt-1 text-xs text-gray-400">
+            Leave empty to use grid image on detail page.
+          </p>
         </div>
 
         <div>
-          <label className="text-xs font-medium text-gray-700">Article content</label>
+          <label className="text-xs font-medium text-gray-700">
+            Article content
+          </label>
           <div className="mt-1">
-            <RichTextEditor value={content} onChange={setContent} height={420} />
+            <RichTextEditor
+              value={content}
+              onChange={setContent}
+              height={420}
+            />
           </div>
         </div>
 
