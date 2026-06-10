@@ -68,7 +68,10 @@ function ImageDropZone({ preview, onChange, onRemove }) {
             className="w-full h-48 object-cover rounded-xl"
           />
           <button
-            onClick={(e) => { e.stopPropagation(); onRemove(); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove();
+            }}
             className="absolute top-2 right-2 bg-white rounded-full p-1 shadow border border-gray-200 hover:bg-gray-50"
           >
             <X size={14} className="text-gray-600" />
@@ -78,12 +81,17 @@ function ImageDropZone({ preview, onChange, onRemove }) {
         <div className="flex flex-col items-center justify-center py-10 px-4 text-center">
           <ImagePlus size={24} className="text-gray-400 mb-2" />
           <button
-            onClick={(e) => { e.stopPropagation(); inputRef.current?.click(); }}
+            onClick={(e) => {
+              e.stopPropagation();
+              inputRef.current?.click();
+            }}
             className="text-sm font-medium text-gray-700 border border-gray-300 bg-white hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors"
           >
             Add image
           </button>
-          <p className="text-xs text-gray-400 mt-2">or drop an image to upload</p>
+          <p className="text-xs text-gray-400 mt-2">
+            or drop an image to upload
+          </p>
         </div>
       )}
     </div>
@@ -98,7 +106,9 @@ function SeoSection({ seo, onChange }) {
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-5">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-900">Search engine listing</h3>
+        <h3 className="text-sm font-semibold text-gray-900">
+          Search engine listing
+        </h3>
         <button
           onClick={() => setExpanded((v) => !v)}
           className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -108,12 +118,15 @@ function SeoSection({ seo, onChange }) {
       </div>
       {!expanded ? (
         <p className="text-xs text-gray-500 mt-2">
-          Add a title and description to see how this collection might appear in a search engine listing
+          Add a title and description to see how this collection might appear in
+          a search engine listing
         </p>
       ) : (
         <div className="mt-4 space-y-3">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Meta title</label>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Meta title
+            </label>
             <input
               value={seo.metaTitle}
               onChange={(e) => onChange({ ...seo, metaTitle: e.target.value })}
@@ -122,10 +135,14 @@ function SeoSection({ seo, onChange }) {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Meta description</label>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Meta description
+            </label>
             <textarea
               value={seo.metaDescription}
-              onChange={(e) => onChange({ ...seo, metaDescription: e.target.value })}
+              onChange={(e) =>
+                onChange({ ...seo, metaDescription: e.target.value })
+              }
               placeholder="Collection meta description"
               rows={3}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 outline-none focus:ring-1 focus:ring-gray-400 resize-none"
@@ -165,8 +182,12 @@ function ProductsSection() {
       </div>
       <div className="flex flex-col items-center justify-center py-10 text-center border border-gray-100 rounded-xl bg-gray-50">
         <Tag size={32} className="text-gray-300 mb-3" strokeWidth={1.5} />
-        <p className="text-sm text-gray-600">There are no products in this collection.</p>
-        <p className="text-sm text-gray-400">Search or browse to add products.</p>
+        <p className="text-sm text-gray-600">
+          There are no products in this collection.
+        </p>
+        <p className="text-sm text-gray-400">
+          Search or browse to add products.
+        </p>
       </div>
     </div>
   );
@@ -308,7 +329,9 @@ export default function CollectionForm({ mode = "add", id, toaster, loader }) {
           {/* Title + Description */}
           <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Title</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Title
+              </label>
               <input
                 value={form.name}
                 onChange={(e) => set("name", e.target.value)}
@@ -317,7 +340,9 @@ export default function CollectionForm({ mode = "add", id, toaster, loader }) {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Description
+              </label>
               <TipTapEditor
                 value={form.description}
                 onChange={(val) => set("description", val)}
@@ -327,7 +352,9 @@ export default function CollectionForm({ mode = "add", id, toaster, loader }) {
 
           {/* Collection type */}
           <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">Collection type</h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">
+              Collection type
+            </h3>
             <div className="space-y-3">
               <label className="flex items-start gap-2.5 cursor-pointer">
                 <input
@@ -342,7 +369,10 @@ export default function CollectionForm({ mode = "add", id, toaster, loader }) {
                   <p className="text-sm font-medium text-gray-900">Manual</p>
                   <p className="text-xs text-gray-500 mt-0.5">
                     Add products to this collection one by one.{" "}
-                    <span className="underline cursor-pointer">Learn more about manual collections</span>.
+                    <span className="underline cursor-pointer">
+                      Learn more about manual collections
+                    </span>
+                    .
                   </p>
                 </div>
               </label>
@@ -358,8 +388,12 @@ export default function CollectionForm({ mode = "add", id, toaster, loader }) {
                 <div>
                   <p className="text-sm font-medium text-gray-900">Smart</p>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    Existing and future products that match the conditions you set will automatically be added.{" "}
-                    <span className="underline cursor-pointer">Learn more about smart collections</span>.
+                    Existing and future products that match the conditions you
+                    set will automatically be added.{" "}
+                    <span className="underline cursor-pointer">
+                      Learn more about smart collections
+                    </span>
+                    .
                   </p>
                 </div>
               </label>
@@ -378,13 +412,22 @@ export default function CollectionForm({ mode = "add", id, toaster, loader }) {
           {/* Publishing */}
           <div className="bg-white rounded-xl border border-gray-200 p-5">
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-sm font-semibold text-gray-900">Publishing</h3>
-              <button className="text-xs font-medium text-blue-600 hover:underline">Manage</button>
+              <h3 className="text-sm font-semibold text-gray-900">
+                Publishing
+              </h3>
+              <button className="text-xs font-medium text-blue-600 hover:underline">
+                Manage
+              </button>
             </div>
-            <p className="text-xs font-medium text-gray-600 mb-2">Sales channels</p>
+            <p className="text-xs font-medium text-gray-600 mb-2">
+              Sales channels
+            </p>
             <div className="space-y-2">
               {CHANNELS.map((ch) => (
-                <label key={ch.key} className="flex items-center gap-2 cursor-pointer">
+                <label
+                  key={ch.key}
+                  className="flex items-center gap-2 cursor-pointer"
+                >
                   <input
                     type="checkbox"
                     checked={form.channels.includes(ch.key)}
@@ -409,14 +452,18 @@ export default function CollectionForm({ mode = "add", id, toaster, loader }) {
 
           {/* Theme template */}
           <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">Theme template</h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">
+              Theme template
+            </h3>
             <select
               value={form.themeTemplate}
               onChange={(e) => set("themeTemplate", e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none bg-white"
             >
               {THEME_TEMPLATES.map((t) => (
-                <option key={t} value={t}>{t}</option>
+                <option key={t} value={t}>
+                  {t}
+                </option>
               ))}
             </select>
           </div>

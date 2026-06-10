@@ -2,7 +2,15 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import { useDispatch } from "react-redux";
 import {
-  ChevronRight, Tag, ShoppingCart, Truck, Search, Plus, X, Calendar, Clock,
+  ChevronRight,
+  Tag,
+  ShoppingCart,
+  Truck,
+  Search,
+  Plus,
+  X,
+  Calendar,
+  Clock,
 } from "lucide-react";
 import {
   createDiscount,
@@ -13,10 +21,22 @@ import {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const TYPE_META = {
-  amount_off_products: { label: "Amount off products", sub: "Product discount", icon: Tag },
-  buy_x_get_y:         { label: "Buy X get Y",         sub: "Product discount", icon: Tag },
-  amount_off_order:    { label: "Amount off order",    sub: "Order discount",   icon: ShoppingCart },
-  free_shipping:       { label: "Free shipping",       sub: "Shipping discount", icon: Truck },
+  amount_off_products: {
+    label: "Amount off products",
+    sub: "Product discount",
+    icon: Tag,
+  },
+  buy_x_get_y: { label: "Buy X get Y", sub: "Product discount", icon: Tag },
+  amount_off_order: {
+    label: "Amount off order",
+    sub: "Order discount",
+    icon: ShoppingCart,
+  },
+  free_shipping: {
+    label: "Free shipping",
+    sub: "Shipping discount",
+    icon: Truck,
+  },
 };
 
 function randomCode() {
@@ -28,7 +48,11 @@ function todayStr() {
 }
 
 function nowTimeStr() {
-  return new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });
+  return new Date().toLocaleTimeString("en-US", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: true,
+  });
 }
 
 function toISO(dateStr, timeStr) {
@@ -50,18 +74,26 @@ function toISO(dateStr, timeStr) {
 
 function Card({ children, className = "" }) {
   return (
-    <div className={`bg-white rounded-xl border border-gray-200 p-5 ${className}`}>
+    <div
+      className={`bg-white rounded-xl border border-gray-200 p-5 ${className}`}
+    >
       {children}
     </div>
   );
 }
 
 function SectionTitle({ children }) {
-  return <h2 className="text-sm font-semibold text-gray-900 mb-4">{children}</h2>;
+  return (
+    <h2 className="text-sm font-semibold text-gray-900 mb-4">{children}</h2>
+  );
 }
 
 function Label({ children, className = "" }) {
-  return <p className={`text-xs font-medium text-gray-700 mb-1 ${className}`}>{children}</p>;
+  return (
+    <p className={`text-xs font-medium text-gray-700 mb-1 ${className}`}>
+      {children}
+    </p>
+  );
 }
 
 function Input({ className = "", ...props }) {
@@ -169,7 +201,9 @@ function MethodSection({ type, form, set }) {
             onChange={(e) => set("code", e.target.value.toUpperCase())}
             placeholder=""
           />
-          <p className="text-xs text-gray-400 mt-1.5">Customers must enter this code at checkout.</p>
+          <p className="text-xs text-gray-400 mt-1.5">
+            Customers must enter this code at checkout.
+          </p>
         </>
       ) : (
         <>
@@ -179,7 +213,9 @@ function MethodSection({ type, form, set }) {
             onChange={(e) => set("autoTitle", e.target.value)}
             placeholder="e.g. Summer Sale"
           />
-          <p className="text-xs text-gray-400 mt-1.5">Customers will see this in their cart and at checkout.</p>
+          <p className="text-xs text-gray-400 mt-1.5">
+            Customers will see this in their cart and at checkout.
+          </p>
         </>
       )}
     </Card>
@@ -281,13 +317,18 @@ function BuyXGetYSection({ form, set }) {
         </div>
         <div className="grid grid-cols-3 gap-3 mb-3">
           <div>
-            <Label>{form.buyType === "min_qty" ? "Quantity" : "Amount (₹)"}</Label>
+            <Label>
+              {form.buyType === "min_qty" ? "Quantity" : "Amount (₹)"}
+            </Label>
             <Input
               type="number"
               min="1"
               value={form.buyType === "min_qty" ? form.buyQty : form.buyAmount}
               onChange={(e) =>
-                set(form.buyType === "min_qty" ? "buyQty" : "buyAmount", e.target.value)
+                set(
+                  form.buyType === "min_qty" ? "buyQty" : "buyAmount",
+                  e.target.value,
+                )
               }
             />
           </div>
@@ -303,7 +344,11 @@ function BuyXGetYSection({ form, set }) {
           </div>
         </div>
         <SearchBrowse
-          placeholder={form.buyFrom === "specific_products" ? "Search products" : "Search collections"}
+          placeholder={
+            form.buyFrom === "specific_products"
+              ? "Search products"
+              : "Search collections"
+          }
         />
       </Card>
 
@@ -311,7 +356,8 @@ function BuyXGetYSection({ form, set }) {
       <Card>
         <SectionTitle>Customer gets</SectionTitle>
         <p className="text-xs text-gray-500 mb-4">
-          Customers must add the quantity of items specified below to their cart.
+          Customers must add the quantity of items specified below to their
+          cart.
         </p>
         <div className="grid grid-cols-3 gap-3 mb-3">
           <div>
@@ -335,10 +381,16 @@ function BuyXGetYSection({ form, set }) {
           </div>
         </div>
         <SearchBrowse
-          placeholder={form.getFrom === "specific_products" ? "Search products" : "Search collections"}
+          placeholder={
+            form.getFrom === "specific_products"
+              ? "Search products"
+              : "Search collections"
+          }
         />
 
-        <p className="text-sm font-semibold text-gray-900 mt-5 mb-3">At a discounted value</p>
+        <p className="text-sm font-semibold text-gray-900 mt-5 mb-3">
+          At a discounted value
+        </p>
         <div className="flex flex-col gap-2 mb-3">
           <Radio
             checked={form.getDiscountType === "percentage"}
@@ -357,7 +409,9 @@ function BuyXGetYSection({ form, set }) {
                 className="pr-7"
                 placeholder="0"
               />
-              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">%</span>
+              <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">
+                %
+              </span>
             </div>
           )}
           <Radio
@@ -376,12 +430,17 @@ function BuyXGetYSection({ form, set }) {
                 className="pl-6"
                 placeholder="0"
               />
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">₹</span>
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">
+                ₹
+              </span>
             </div>
           )}
           <Radio
             checked={form.getDiscountType === "free"}
-            onChange={() => { set("getDiscountType", "free"); set("getDiscountValue", "100"); }}
+            onChange={() => {
+              set("getDiscountType", "free");
+              set("getDiscountValue", "100");
+            }}
           >
             Free
           </Radio>
@@ -453,7 +512,9 @@ function MinPurchaseSection({ form, set }) {
               className="pl-6"
               placeholder="0.00"
             />
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">₹</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">
+              ₹
+            </span>
           </div>
         )}
         <Radio
@@ -573,7 +634,10 @@ function ActiveDatesSection({ form, set }) {
         <div>
           <Label>Start date</Label>
           <div className="relative">
-            <Calendar size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Calendar
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            />
             <Input
               type="date"
               value={form.startDate}
@@ -585,7 +649,10 @@ function ActiveDatesSection({ form, set }) {
         <div>
           <Label>Start time (IST)</Label>
           <div className="relative">
-            <Clock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <Clock
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+            />
             <Input
               type="time"
               value={form.startTime}
@@ -606,7 +673,10 @@ function ActiveDatesSection({ form, set }) {
           <div>
             <Label>End date</Label>
             <div className="relative">
-              <Calendar size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Calendar
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              />
               <Input
                 type="date"
                 value={form.endDate}
@@ -618,7 +688,10 @@ function ActiveDatesSection({ form, set }) {
           <div>
             <Label>End time (IST)</Label>
             <div className="relative">
-              <Clock size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+              <Clock
+                size={14}
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+              />
               <Input
                 type="time"
                 value={form.endTime}
@@ -638,7 +711,10 @@ function ActiveDatesSection({ form, set }) {
 function SummaryPanel({ type, form }) {
   const meta = TYPE_META[type];
   const Icon = meta.icon;
-  const code = form.method === "discount_code" ? (form.code || "No discount code yet") : (form.autoTitle || "No title yet");
+  const code =
+    form.method === "discount_code"
+      ? form.code || "No discount code yet"
+      : form.autoTitle || "No title yet";
   const label = form.method === "discount_code" ? "Code" : "Title";
 
   const details = [
@@ -647,9 +723,11 @@ function SummaryPanel({ type, form }) {
     form.minPurchaseType === "amount"
       ? `Minimum purchase of ₹${form.minOrderAmount || "0"}`
       : form.minPurchaseType === "qty"
-      ? `Minimum quantity of ${form.minQty || "0"}`
-      : "No minimum purchase requirement",
-    form.limitTotal ? `${form.limitTotalValue || "0"} total uses` : "No usage limits",
+        ? `Minimum quantity of ${form.minQty || "0"}`
+        : "No minimum purchase requirement",
+    form.limitTotal
+      ? `${form.limitTotalValue || "0"} total uses`
+      : "No usage limits",
     form.combineProduct || form.combineOrder || form.combineShipping
       ? "Can combine with other discounts"
       : "Can't combine with other discounts",
@@ -673,7 +751,10 @@ function SummaryPanel({ type, form }) {
         <p className="text-xs font-semibold text-gray-900 mb-2">Details</p>
         <ul className="space-y-1">
           {details.map((d, i) => (
-            <li key={i} className="text-xs text-gray-600 flex items-start gap-1.5">
+            <li
+              key={i}
+              className="text-xs text-gray-600 flex items-start gap-1.5"
+            >
               <span className="mt-1 w-1 h-1 rounded-full bg-gray-400 shrink-0" />
               {d}
             </li>
@@ -684,10 +765,7 @@ function SummaryPanel({ type, form }) {
       {/* Sales channel */}
       <Card>
         <SectionTitle>Sales channel access</SectionTitle>
-        <Checkbox
-          checked={form.salesChannel}
-          onChange={() => {}}
-        >
+        <Checkbox checked={form.salesChannel} onChange={() => {}}>
           Allow discount to be featured on selected channels
         </Checkbox>
       </Card>
@@ -731,7 +809,12 @@ function TagsInput({ form }) {
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          onKeyDown={(e) => { if (e.key === "Enter" || e.key === ",") { e.preventDefault(); add(); } }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === ",") {
+              e.preventDefault();
+              add();
+            }
+          }}
           placeholder="Add tags"
           className="flex-1 text-sm outline-none placeholder-gray-400"
         />
@@ -779,7 +862,12 @@ const defaultForm = () => ({
   tags: [],
 });
 
-export default function DiscountForm({ type = "amount_off_products", mode = "add", id, toaster }) {
+export default function DiscountForm({
+  type = "amount_off_products",
+  mode = "add",
+  id,
+  toaster,
+}) {
   const router = useRouter();
   const dispatch = useDispatch();
   const [form, setForm] = useState(defaultForm());
@@ -808,18 +896,22 @@ export default function DiscountForm({ type = "amount_off_products", mode = "add
           method: "discount_code",
           code: c.code || "",
           discountValue: String(c.discountValue ?? ""),
-          discountValueType: c.discountType === "percentage" ? "percentage" : "fixed",
+          discountValueType:
+            c.discountType === "percentage" ? "percentage" : "fixed",
           minOrderAmount: String(c.minOrderAmount ?? ""),
           minPurchaseType: c.minOrderAmount > 0 ? "amount" : "none",
           limitTotal: (c.usageLimit ?? 0) > 0,
           limitTotalValue: String(c.usageLimit ?? ""),
           limitPerCustomer: (c.perUserLimit ?? 1) <= 1,
-          maxDiscountAmount: c.maxDiscountAmount ? String(c.maxDiscountAmount) : "",
+          maxDiscountAmount: c.maxDiscountAmount
+            ? String(c.maxDiscountAmount)
+            : "",
           startDate: c.startDate
             ? new Date(c.startDate).toISOString().split("T")[0]
             : todayStr(),
           hasEndDate: !noExpiry,
-          endDate: !noExpiry && expiry ? expiry.toISOString().split("T")[0] : "",
+          endDate:
+            !noExpiry && expiry ? expiry.toISOString().split("T")[0] : "",
         }));
       })
       .finally(() => {
@@ -834,18 +926,29 @@ export default function DiscountForm({ type = "amount_off_products", mode = "add
   const buildPayload = () => {
     const isPercent = form.discountValueType === "percentage";
     const payload = {
-      code: form.method === "discount_code"
-        ? (form.code || randomCode())
-        : (form.autoTitle?.toUpperCase().replace(/\s+/g, "_") || randomCode()),
+      code:
+        form.method === "discount_code"
+          ? form.code || randomCode()
+          : form.autoTitle?.toUpperCase().replace(/\s+/g, "_") || randomCode(),
       description: `${TYPE_META[type].label}${form.autoTitle ? " - " + form.autoTitle : ""}`,
-      discountType: type === "free_shipping" ? "flat" : (isPercent ? "percentage" : "flat"),
-      discountValue: type === "free_shipping"
-        ? 0
-        : type === "buy_x_get_y"
-        ? (form.getDiscountType === "free" ? 100 : Number(form.getDiscountValue) || 0)
-        : Number(form.discountValue) || 0,
-      minOrderAmount: form.minPurchaseType === "amount" ? Number(form.minOrderAmount) || 0 : 0,
-      maxDiscountAmount: isPercent && form.maxDiscountAmount ? Number(form.maxDiscountAmount) : undefined,
+      discountType:
+        type === "free_shipping" ? "flat" : isPercent ? "percentage" : "flat",
+      discountValue:
+        type === "free_shipping"
+          ? 0
+          : type === "buy_x_get_y"
+            ? form.getDiscountType === "free"
+              ? 100
+              : Number(form.getDiscountValue) || 0
+            : Number(form.discountValue) || 0,
+      minOrderAmount:
+        form.minPurchaseType === "amount"
+          ? Number(form.minOrderAmount) || 0
+          : 0,
+      maxDiscountAmount:
+        isPercent && form.maxDiscountAmount
+          ? Number(form.maxDiscountAmount)
+          : undefined,
       usageLimit: form.limitTotal ? Number(form.limitTotalValue) || 0 : 0,
       perUserLimit: form.limitPerCustomer ? 1 : 99,
       startDate: toISO(form.startDate, form.startTime),
@@ -862,30 +965,47 @@ export default function DiscountForm({ type = "amount_off_products", mode = "add
       toaster?.({ type: "error", message: "Discount code is required" });
       return;
     }
-    if (type !== "free_shipping" && type !== "buy_x_get_y" && !form.discountValue) {
+    if (
+      type !== "free_shipping" &&
+      type !== "buy_x_get_y" &&
+      !form.discountValue
+    ) {
       toaster?.({ type: "error", message: "Discount value is required" });
       return;
     }
     if (form.hasEndDate && !form.endDate) {
-      toaster?.({ type: "error", message: "End date is required when set end date is checked" });
+      toaster?.({
+        type: "error",
+        message: "End date is required when set end date is checked",
+      });
       return;
     }
 
     setSaving(true);
     try {
       const payload = buildPayload();
-      const res = mode === "edit"
-        ? await dispatch(updateDiscountById(id, payload, router))
-        : await dispatch(createDiscount(payload, router));
+      const res =
+        mode === "edit"
+          ? await dispatch(updateDiscountById(id, payload, router))
+          : await dispatch(createDiscount(payload, router));
 
       if (res?.status) {
-        toaster?.({ type: "success", message: mode === "edit" ? "Discount updated" : "Discount created" });
+        toaster?.({
+          type: "success",
+          message: mode === "edit" ? "Discount updated" : "Discount created",
+        });
         router.push("/discounts");
       } else {
-        toaster?.({ type: "error", message: res?.data?.message || "Something went wrong" });
+        toaster?.({
+          type: "error",
+          message: res?.data?.message || "Something went wrong",
+        });
       }
     } catch (err) {
-      toaster?.({ type: "error", message: err?.message || "Something went wrong" });
+      toaster?.({
+        type: "error",
+        message: err?.message || "Something went wrong",
+      });
     } finally {
       setSaving(false);
     }
@@ -905,7 +1025,10 @@ export default function DiscountForm({ type = "amount_off_products", mode = "add
     <div className="p-4 sm:p-6 pb-20">
       {/* Breadcrumb */}
       <div className="flex items-center gap-1.5 text-sm text-gray-500 mb-5">
-        <button onClick={() => router.push("/discounts")} className="hover:text-gray-800 transition-colors">
+        <button
+          onClick={() => router.push("/discounts")}
+          className="hover:text-gray-800 transition-colors"
+        >
           Discounts
         </button>
         <ChevronRight size={14} />

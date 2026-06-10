@@ -2,7 +2,12 @@ import { useMemo, useRef } from "react";
 import JoditEditor from "jodit-react";
 import "jodit/es2021/jodit.css";
 
-export default function RichTextEditor({ value, onChange, placeholder, height = 360 }) {
+export default function RichTextEditor({
+  value,
+  onChange,
+  placeholder,
+  height = 360,
+}) {
   const editorRef = useRef(null);
 
   const config = useMemo(

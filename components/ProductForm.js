@@ -34,10 +34,19 @@ const TAXONOMY_GROUPS = {
 };
 
 function normalizeList(items) {
-  return (items || []).map((x) => (typeof x === "string" ? x : x?.value)).filter(Boolean);
+  return (items || [])
+    .map((x) => (typeof x === "string" ? x : x?.value))
+    .filter(Boolean);
 }
 
-function MultiSelect({ label, options, value, onChange, placeholder = "Select", single = false }) {
+function MultiSelect({
+  label,
+  options,
+  value,
+  onChange,
+  placeholder = "Select",
+  single = false,
+}) {
   const selected = Array.isArray(value) ? value : [];
   const toggle = (opt) => {
     if (selected.includes(opt)) onChange([]);
@@ -46,7 +55,9 @@ function MultiSelect({ label, options, value, onChange, placeholder = "Select", 
 
   return (
     <div>
-      <label className="block text-xs font-medium text-gray-600 mb-1">{label}</label>
+      <label className="block text-xs font-medium text-gray-600 mb-1">
+        {label}
+      </label>
       <div className="border border-gray-300 rounded-lg p-2 bg-white">
         {options.length === 0 ? (
           <div className="text-sm text-gray-400 px-1 py-2">{placeholder}</div>
@@ -60,7 +71,9 @@ function MultiSelect({ label, options, value, onChange, placeholder = "Select", 
                   type="button"
                   onClick={() => toggle(opt)}
                   className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
-                    on ? "bg-[#0A4D91] text-white" : "bg-[#f0f2f5] text-[#0A4D91] hover:bg-[#e6eaef]"
+                    on
+                      ? "bg-[#0A4D91] text-white"
+                      : "bg-[#f0f2f5] text-[#0A4D91] hover:bg-[#e6eaef]"
                   }`}
                 >
                   {opt}
@@ -110,7 +123,8 @@ function CategoryPicker({ value, onChange, categories }) {
   const searchResults = search.trim()
     ? source.flatMap((cat) => {
         const matches = [];
-        if (cat.name.toLowerCase().includes(search.toLowerCase())) matches.push(cat.name);
+        if (cat.name.toLowerCase().includes(search.toLowerCase()))
+          matches.push(cat.name);
         (cat.children || []).forEach((child) => {
           if (child.toLowerCase().includes(search.toLowerCase()))
             matches.push(`${cat.name} > ${child}`);
@@ -127,7 +141,9 @@ function CategoryPicker({ value, onChange, categories }) {
         type="button"
         onClick={handleOpen}
         className={`w-full flex items-center justify-between border rounded-lg px-3 py-2 text-sm bg-white transition-colors ${
-          open ? "border-gray-400 ring-1 ring-gray-400" : "border-gray-300 hover:border-gray-400"
+          open
+            ? "border-gray-400 ring-1 ring-gray-400"
+            : "border-gray-300 hover:border-gray-400"
         }`}
       >
         <span className={value ? "text-gray-800" : "text-gray-400"}>
@@ -136,7 +152,10 @@ function CategoryPicker({ value, onChange, categories }) {
         <div className="flex items-center gap-1 shrink-0">
           {value && (
             <span
-              onClick={(e) => { e.stopPropagation(); onChange(""); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onChange("");
+              }}
               className="text-gray-400 hover:text-gray-600 p-0.5"
             >
               <X size={12} />
@@ -154,7 +173,10 @@ function CategoryPicker({ value, onChange, categories }) {
             <input
               autoFocus
               value={search}
-              onChange={(e) => { setSearch(e.target.value); setParent(null); }}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setParent(null);
+              }}
               placeholder="Search categories"
               className="flex-1 text-sm text-gray-700 outline-none placeholder-gray-400"
             />
@@ -169,7 +191,9 @@ function CategoryPicker({ value, onChange, categories }) {
             {/* Search results */}
             {searchResults ? (
               searchResults.length === 0 ? (
-                <p className="px-4 py-6 text-sm text-gray-400 text-center">No categories found</p>
+                <p className="px-4 py-6 text-sm text-gray-400 text-center">
+                  No categories found
+                </p>
               ) : (
                 searchResults.map((name) => (
                   <button
@@ -178,7 +202,9 @@ function CategoryPicker({ value, onChange, categories }) {
                     className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
                   >
                     <span>{name}</span>
-                    {value === name && <Check size={13} className="text-gray-600 shrink-0" />}
+                    {value === name && (
+                      <Check size={13} className="text-gray-600 shrink-0" />
+                    )}
                   </button>
                 ))
               )
@@ -197,7 +223,9 @@ function CategoryPicker({ value, onChange, categories }) {
                   className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                 >
                   <span className="text-gray-500">All {parent}</span>
-                  {value === parent && <Check size={13} className="text-gray-600 shrink-0" />}
+                  {value === parent && (
+                    <Check size={13} className="text-gray-600 shrink-0" />
+                  )}
                 </button>
                 {(activeCategory?.children || []).map((child) => {
                   const full = `${parent} > ${child}`;
@@ -208,7 +236,9 @@ function CategoryPicker({ value, onChange, categories }) {
                       className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                       <span>{child}</span>
-                      {value === full && <Check size={13} className="text-gray-600 shrink-0" />}
+                      {value === full && (
+                        <Check size={13} className="text-gray-600 shrink-0" />
+                      )}
                     </button>
                   );
                 })}
@@ -218,10 +248,18 @@ function CategoryPicker({ value, onChange, categories }) {
               source.map((cat) => (
                 <button
                   key={cat.name}
-                  onClick={() => cat.children ? setParent(cat.name) : select(cat.name)}
+                  onClick={() =>
+                    cat.children ? setParent(cat.name) : select(cat.name)
+                  }
                   className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                 >
-                  <span className={value === cat.name || value?.startsWith(cat.name + " >") ? "font-medium text-gray-900" : ""}>
+                  <span
+                    className={
+                      value === cat.name || value?.startsWith(cat.name + " >")
+                        ? "font-medium text-gray-900"
+                        : ""
+                    }
+                  >
                     {cat.name}
                   </span>
                   <span className="shrink-0 ml-2">
@@ -255,31 +293,92 @@ const WEIGHT_UNITS = ["kg", "g", "lb", "oz"];
 const DIM_UNITS = ["cm", "in"];
 
 const COUNTRIES = [
-  "Afghanistan","Albania","Algeria","Argentina","Australia","Austria","Bangladesh","Belgium",
-  "Brazil","Canada","Chile","China","Colombia","Croatia","Czech Republic","Denmark","Egypt",
-  "Ethiopia","Finland","France","Germany","Ghana","Greece","Hong Kong","Hungary","India",
-  "Indonesia","Iran","Iraq","Ireland","Israel","Italy","Japan","Jordan","Kenya","Malaysia",
-  "Mexico","Morocco","Netherlands","New Zealand","Nigeria","Norway","Pakistan","Peru",
-  "Philippines","Poland","Portugal","Romania","Russia","Saudi Arabia","Singapore",
-  "South Africa","South Korea","Spain","Sri Lanka","Sweden","Switzerland","Taiwan","Thailand",
-  "Turkey","Ukraine","United Arab Emirates","United Kingdom","United States","Vietnam",
+  "Afghanistan",
+  "Albania",
+  "Algeria",
+  "Argentina",
+  "Australia",
+  "Austria",
+  "Bangladesh",
+  "Belgium",
+  "Brazil",
+  "Canada",
+  "Chile",
+  "China",
+  "Colombia",
+  "Croatia",
+  "Czech Republic",
+  "Denmark",
+  "Egypt",
+  "Ethiopia",
+  "Finland",
+  "France",
+  "Germany",
+  "Ghana",
+  "Greece",
+  "Hong Kong",
+  "Hungary",
+  "India",
+  "Indonesia",
+  "Iran",
+  "Iraq",
+  "Ireland",
+  "Israel",
+  "Italy",
+  "Japan",
+  "Jordan",
+  "Kenya",
+  "Malaysia",
+  "Mexico",
+  "Morocco",
+  "Netherlands",
+  "New Zealand",
+  "Nigeria",
+  "Norway",
+  "Pakistan",
+  "Peru",
+  "Philippines",
+  "Poland",
+  "Portugal",
+  "Romania",
+  "Russia",
+  "Saudi Arabia",
+  "Singapore",
+  "South Africa",
+  "South Korea",
+  "Spain",
+  "Sri Lanka",
+  "Sweden",
+  "Switzerland",
+  "Taiwan",
+  "Thailand",
+  "Turkey",
+  "Ukraine",
+  "United Arab Emirates",
+  "United Kingdom",
+  "United States",
+  "Vietnam",
 ];
 
 // ── Package modal ─────────────────────────────────────────────────────────────
 
 const PKG_TYPES = [
-  { value: "box",          label: "Box",          icon: "📦" },
-  { value: "envelope",     label: "Envelope",     icon: "✉️" },
+  { value: "box", label: "Box", icon: "📦" },
+  { value: "envelope", label: "Envelope", icon: "✉️" },
   { value: "soft_package", label: "Soft package", icon: "🛍️" },
 ];
 
 function PackageModal({ pkg, onSave, onClose }) {
   const [local, setLocal] = useState({ ...pkg });
   const setL = (key, val) => setLocal((p) => ({ ...p, [key]: val }));
-  const canSave = local.name.trim() || (local.length && local.width && local.height);
+  const canSave =
+    local.name.trim() || (local.length && local.width && local.height);
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4" onClick={onClose}>
+    <div
+      className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
       <div
         className="bg-white rounded-2xl w-full max-w-lg shadow-2xl"
         onClick={(e) => e.stopPropagation()}
@@ -287,7 +386,10 @@ function PackageModal({ pkg, onSave, onClose }) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 pt-5 pb-4 border-b border-gray-100">
           <h2 className="text-base font-semibold text-gray-900">Add package</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-700 transition-colors">
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-700 transition-colors"
+          >
             <X size={18} />
           </button>
         </div>
@@ -295,7 +397,9 @@ function PackageModal({ pkg, onSave, onClose }) {
         <div className="px-6 py-5 space-y-5">
           {/* Package type */}
           <div>
-            <p className="text-sm font-medium text-gray-700 mb-2">Package type</p>
+            <p className="text-sm font-medium text-gray-700 mb-2">
+              Package type
+            </p>
             <div className="grid grid-cols-3 gap-2">
               {PKG_TYPES.map((t) => (
                 <button
@@ -319,7 +423,9 @@ function PackageModal({ pkg, onSave, onClose }) {
             <div className="grid grid-cols-4 gap-2">
               {["length", "width", "height"].map((dim) => (
                 <div key={dim}>
-                  <label className="block text-xs font-medium text-gray-600 mb-1 capitalize">{dim}</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1 capitalize">
+                    {dim}
+                  </label>
                   <input
                     type="number"
                     min="0"
@@ -332,13 +438,17 @@ function PackageModal({ pkg, onSave, onClose }) {
                 </div>
               ))}
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Unit</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  Unit
+                </label>
                 <select
                   value={local.dimensionUnit}
                   onChange={(e) => setL("dimensionUnit", e.target.value)}
                   className="w-full border border-gray-300 rounded-lg px-2 py-2 text-sm text-gray-700 outline-none bg-white"
                 >
-                  {DIM_UNITS.map((u) => <option key={u}>{u}</option>)}
+                  {DIM_UNITS.map((u) => (
+                    <option key={u}>{u}</option>
+                  ))}
                 </select>
               </div>
             </div>
@@ -347,7 +457,9 @@ function PackageModal({ pkg, onSave, onClose }) {
           {/* Weight empty */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Weight (empty)</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Weight (empty)
+              </label>
               <input
                 type="number"
                 min="0"
@@ -359,20 +471,26 @@ function PackageModal({ pkg, onSave, onClose }) {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Unit</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Unit
+              </label>
               <select
                 value={local.weightUnit}
                 onChange={(e) => setL("weightUnit", e.target.value)}
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none bg-white"
               >
-                {WEIGHT_UNITS.map((u) => <option key={u}>{u}</option>)}
+                {WEIGHT_UNITS.map((u) => (
+                  <option key={u}>{u}</option>
+                ))}
               </select>
             </div>
           </div>
 
           {/* Package name */}
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Package name</label>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Package name
+            </label>
             <input
               value={local.name}
               onChange={(e) => setL("name", e.target.value)}
@@ -390,8 +508,13 @@ function PackageModal({ pkg, onSave, onClose }) {
               className="mt-0.5 w-4 h-4 rounded border-gray-300 accent-gray-900"
             />
             <div>
-              <p className="text-sm text-gray-700 font-medium">Use as default package</p>
-              <p className="text-xs text-gray-400 mt-0.5">Used to calculate rates at checkout and pre-selected when buying labels</p>
+              <p className="text-sm text-gray-700 font-medium">
+                Use as default package
+              </p>
+              <p className="text-xs text-gray-400 mt-0.5">
+                Used to calculate rates at checkout and pre-selected when buying
+                labels
+              </p>
             </div>
           </label>
         </div>
@@ -405,7 +528,10 @@ function PackageModal({ pkg, onSave, onClose }) {
             Cancel
           </button>
           <button
-            onClick={() => { onSave(local); onClose(); }}
+            onClick={() => {
+              onSave(local);
+              onClose();
+            }}
             disabled={!canSave}
             className="text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 disabled:opacity-40 px-4 py-2 rounded-lg transition-colors"
           >
@@ -419,23 +545,28 @@ function PackageModal({ pkg, onSave, onClose }) {
 
 // ── Media upload ──────────────────────────────────────────────────────────────
 
-function MediaUpload({ existingImages, newFiles, onAddFiles, onRemoveExisting, onRemoveNew }) {
+function MediaUpload({
+  existingImages,
+  newFiles,
+  onAddFiles,
+  onRemoveExisting,
+  onRemoveNew,
+}) {
   const inputRef = useRef(null);
   const total = existingImages.length + newFiles.length;
 
   const handleDrop = (e) => {
     e.preventDefault();
-    const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith("image/"));
+    const files = Array.from(e.dataTransfer.files).filter((f) =>
+      f.type.startsWith("image/"),
+    );
     if (files.length) onAddFiles(files);
   };
 
   return (
     <div>
       {total > 0 ? (
-        <div
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={handleDrop}
-        >
+        <div onDragOver={(e) => e.preventDefault()} onDrop={handleDrop}>
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-2 mb-2">
             {existingImages.map((url, i) => (
               <div key={`ex-${i}`} className="relative group">
@@ -487,13 +618,18 @@ function MediaUpload({ existingImages, newFiles, onAddFiles, onRemoveExisting, o
           <ImagePlus size={24} className="text-gray-400 mb-2" />
           <div className="flex gap-3">
             <button
-              onClick={(e) => { e.stopPropagation(); inputRef.current?.click(); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                inputRef.current?.click();
+              }}
               className="text-sm font-medium text-gray-700 border border-gray-300 bg-white hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors"
             >
               Upload new
             </button>
           </div>
-          <p className="text-xs text-gray-400 mt-2">Accepts images, up to 10 files</p>
+          <p className="text-xs text-gray-400 mt-2">
+            Accepts images, up to 10 files
+          </p>
         </div>
       )}
       <input
@@ -527,7 +663,10 @@ function TagsInput({ tags, onChange }) {
     <div className="border border-gray-300 rounded-lg px-3 py-2 min-h-[38px]">
       <div className="flex flex-wrap gap-1.5 mb-1">
         {tags.map((tag) => (
-          <span key={tag} className="flex items-center gap-1 bg-gray-100 text-gray-700 text-xs px-2 py-0.5 rounded-md">
+          <span
+            key={tag}
+            className="flex items-center gap-1 bg-gray-100 text-gray-700 text-xs px-2 py-0.5 rounded-md"
+          >
             {tag}
             <button onClick={() => onChange(tags.filter((t) => t !== tag))}>
               <X size={10} />
@@ -539,7 +678,10 @@ function TagsInput({ tags, onChange }) {
         value={input}
         onChange={(e) => setInput(e.target.value)}
         onKeyDown={(e) => {
-          if (e.key === "Enter" || e.key === ",") { e.preventDefault(); add(); }
+          if (e.key === "Enter" || e.key === ",") {
+            e.preventDefault();
+            add();
+          }
         }}
         placeholder={tags.length === 0 ? "Add tags (press Enter)" : ""}
         className="text-sm text-gray-700 outline-none w-full placeholder-gray-400"
@@ -556,7 +698,9 @@ function SeoSection({ seo, onChange }) {
   return (
     <div className="bg-white rounded-xl border border-gray-200 p-5">
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-semibold text-gray-900">Search engine listing</h3>
+        <h3 className="text-sm font-semibold text-gray-900">
+          Search engine listing
+        </h3>
         <button
           onClick={() => setExpanded((v) => !v)}
           className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -566,12 +710,15 @@ function SeoSection({ seo, onChange }) {
       </div>
       {!expanded ? (
         <p className="text-xs text-gray-500 mt-2">
-          Add a title and description to see how this product might appear in a search engine listing
+          Add a title and description to see how this product might appear in a
+          search engine listing
         </p>
       ) : (
         <div className="mt-4 space-y-3">
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Meta title</label>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Meta title
+            </label>
             <input
               value={seo.metaTitle}
               onChange={(e) => onChange({ ...seo, metaTitle: e.target.value })}
@@ -580,23 +727,32 @@ function SeoSection({ seo, onChange }) {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Meta description</label>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Meta description
+            </label>
             <textarea
               value={seo.metaDescription}
-              onChange={(e) => onChange({ ...seo, metaDescription: e.target.value })}
+              onChange={(e) =>
+                onChange({ ...seo, metaDescription: e.target.value })
+              }
               placeholder="Product meta description"
               rows={3}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 outline-none focus:ring-1 focus:ring-gray-400 resize-none"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-600 mb-1">Meta keywords</label>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Meta keywords
+            </label>
             <input
               value={(seo.metaKeywords || []).join(", ")}
               onChange={(e) =>
                 onChange({
                   ...seo,
-                  metaKeywords: e.target.value.split(",").map((k) => k.trim()).filter(Boolean),
+                  metaKeywords: e.target.value
+                    .split(",")
+                    .map((k) => k.trim())
+                    .filter(Boolean),
                 })
               }
               placeholder="keyword1, keyword2"
@@ -612,7 +768,8 @@ function SeoSection({ seo, onChange }) {
 // ── Variants section ──────────────────────────────────────────────────────────
 
 function VariantsSection({ variants, onChange }) {
-  const addVariant = () => onChange([...variants, { type: "", options: [{ label: "" }] }]);
+  const addVariant = () =>
+    onChange([...variants, { type: "", options: [{ label: "" }] }]);
 
   const removeVariant = (vi) => onChange(variants.filter((_, i) => i !== vi));
 
@@ -630,7 +787,10 @@ function VariantsSection({ variants, onChange }) {
 
   const removeOption = (vi, oi) => {
     const next = [...variants];
-    next[vi] = { ...next[vi], options: next[vi].options.filter((_, i) => i !== oi) };
+    next[vi] = {
+      ...next[vi],
+      options: next[vi].options.filter((_, i) => i !== oi),
+    };
     onChange(next);
   };
 
@@ -657,7 +817,9 @@ function VariantsSection({ variants, onChange }) {
                 className="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 outline-none focus:ring-1 focus:ring-gray-400"
               />
             </div>
-            <label className="block text-xs font-medium text-gray-600 mb-2 ml-6">Option values</label>
+            <label className="block text-xs font-medium text-gray-600 mb-2 ml-6">
+              Option values
+            </label>
             <div className="space-y-2 ml-6">
               {v.options.map((opt, oi) => (
                 <div key={oi} className="flex items-center gap-2">
@@ -734,7 +896,17 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
   const { collections } = useSelector((s) => s.collection);
   const isEdit = mode === "edit";
 
-  const defaultPkg = { type: "box", length: "", width: "", height: "", dimensionUnit: "cm", emptyWeight: "", weightUnit: "kg", name: "", isDefault: false };
+  const defaultPkg = {
+    type: "box",
+    length: "",
+    width: "",
+    height: "",
+    dimensionUnit: "cm",
+    emptyWeight: "",
+    weightUnit: "kg",
+    name: "",
+    isDefault: false,
+  };
 
   const [form, setForm] = useState({
     name: "",
@@ -787,7 +959,10 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
 
   const set = (key, val) => setForm((prev) => ({ ...prev, [key]: val }));
   const setDim = (key, val) =>
-    setForm((prev) => ({ ...prev, dimensions: { ...prev.dimensions, [key]: val } }));
+    setForm((prev) => ({
+      ...prev,
+      dimensions: { ...prev.dimensions, [key]: val },
+    }));
 
   useEffect(() => {
     dispatch(fetchCollections(router));
@@ -798,7 +973,14 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
       try {
         const groups = Object.keys(TAXONOMY_GROUPS);
         const results = await Promise.all(
-          groups.map((g) => Api("get", `product-taxonomy?group=${encodeURIComponent(g)}`, null, router)),
+          groups.map((g) =>
+            Api(
+              "get",
+              `product-taxonomy?group=${encodeURIComponent(g)}`,
+              null,
+              router,
+            ),
+          ),
         );
         const next = {};
         groups.forEach((g, i) => {
@@ -806,7 +988,12 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
         });
         setTaxonomy(next);
       } catch {
-        setTaxonomy({ product_type: [], skin_type: [], skin_concern: [], age: [] });
+        setTaxonomy({
+          product_type: [],
+          skin_type: [],
+          skin_concern: [],
+          age: [],
+        });
       }
     };
     loadTaxonomy();
@@ -827,7 +1014,10 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
       discountValue: product.discountValue ?? "",
       sku: product.sku || "",
       stock: product.stock ?? 0,
-      category: typeof product.category === "string" ? product.category : (product.category?.name || ""),
+      category:
+        typeof product.category === "string"
+          ? product.category
+          : product.category?.name || "",
       collection: product.collection?._id || product.collection || "",
       brand: product.brand || "",
       productType: product.productType || "",
@@ -851,10 +1041,13 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
       chargeTax: product.chargeTax ?? true,
       costPerItem: product.costPerItem ?? "",
       barcode: product.barcode || "",
-      continueSellingWhenOutOfStock: product.continueSellingWhenOutOfStock || false,
+      continueSellingWhenOutOfStock:
+        product.continueSellingWhenOutOfStock || false,
       countryOfOrigin: product.countryOfOrigin || "",
       hsCode: product.hsCode || "",
-      package: product.package ? { ...defaultPkg, ...product.package } : { ...defaultPkg },
+      package: product.package
+        ? { ...defaultPkg, ...product.package }
+        : { ...defaultPkg },
       status: product.status || "active",
       featured: product.featured || false,
       variants: product.variants || [],
@@ -867,7 +1060,9 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
 
   const handleAddFiles = (files) => {
     const remaining = 10 - existingImages.length - newImageFiles.length;
-    setNewImageFiles((prev) => [...prev, ...files].slice(0, prev.length + remaining));
+    setNewImageFiles((prev) =>
+      [...prev, ...files].slice(0, prev.length + remaining),
+    );
   };
 
   const handleSave = async () => {
@@ -884,31 +1079,59 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
       return;
     }
     if (isNaN(Number(form.price)) || Number(form.price) < 0) {
-      toaster?.({ type: "error", message: "Price must be a valid number (0 or more)" });
+      toaster?.({
+        type: "error",
+        message: "Price must be a valid number (0 or more)",
+      });
       return;
     }
-    if (form.compareAtPrice !== "" && Number(form.compareAtPrice) < Number(form.price)) {
-      toaster?.({ type: "error", message: "Compare-at price should be higher than the selling price" });
+    if (
+      form.compareAtPrice !== "" &&
+      Number(form.compareAtPrice) < Number(form.price)
+    ) {
+      toaster?.({
+        type: "error",
+        message: "Compare-at price should be higher than the selling price",
+      });
       return;
     }
     if (form.costPerItem !== "" && isNaN(Number(form.costPerItem))) {
-      toaster?.({ type: "error", message: "Cost per item must be a valid number" });
+      toaster?.({
+        type: "error",
+        message: "Cost per item must be a valid number",
+      });
       return;
     }
-    if (form.discountValue !== "" && (isNaN(Number(form.discountValue)) || Number(form.discountValue) < 0)) {
-      toaster?.({ type: "error", message: "Discount value must be a valid non-negative number" });
+    if (
+      form.discountValue !== "" &&
+      (isNaN(Number(form.discountValue)) || Number(form.discountValue) < 0)
+    ) {
+      toaster?.({
+        type: "error",
+        message: "Discount value must be a valid non-negative number",
+      });
       return;
     }
-    if (form.stock !== "" && (isNaN(Number(form.stock)) || Number(form.stock) < 0)) {
+    if (
+      form.stock !== "" &&
+      (isNaN(Number(form.stock)) || Number(form.stock) < 0)
+    ) {
       toaster?.({ type: "error", message: "Stock quantity must be 0 or more" });
       return;
     }
     // Validate variants — each type must be non-empty and have at least one option
     const invalidVariant = form.variants.find(
-      (v) => !v.type.trim() || v.options.length === 0 || v.options.some((o) => !o.label.trim())
+      (v) =>
+        !v.type.trim() ||
+        v.options.length === 0 ||
+        v.options.some((o) => !o.label.trim()),
     );
     if (invalidVariant) {
-      toaster?.({ type: "error", message: "Each variant must have a name and at least one non-empty option" });
+      toaster?.({
+        type: "error",
+        message:
+          "Each variant must have a name and at least one non-empty option",
+      });
       return;
     }
 
@@ -922,14 +1145,19 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
     fd.append("name", form.name);
     fd.append("description", form.description);
     fd.append("price", form.price);
-    if (form.compareAtPrice !== "") fd.append("compareAtPrice", form.compareAtPrice);
+    if (form.compareAtPrice !== "")
+      fd.append("compareAtPrice", form.compareAtPrice);
     fd.append("chargeTax", form.chargeTax);
     if (form.costPerItem !== "") fd.append("costPerItem", form.costPerItem);
     fd.append("discountType", form.discountType);
-    if (form.discountValue !== "") fd.append("discountValue", form.discountValue);
+    if (form.discountValue !== "")
+      fd.append("discountValue", form.discountValue);
     fd.append("sku", form.sku);
     fd.append("barcode", form.barcode);
-    fd.append("continueSellingWhenOutOfStock", form.continueSellingWhenOutOfStock);
+    fd.append(
+      "continueSellingWhenOutOfStock",
+      form.continueSellingWhenOutOfStock,
+    );
     fd.append("stock", form.stock);
     if (form.collection) fd.append("collection", form.collection);
     fd.append("brand", form.brand);
@@ -938,15 +1166,19 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
     fd.append("age", form.age);
     fd.append("skinConcerns", JSON.stringify(form.skinConcerns));
     fd.append("tags", JSON.stringify(form.tags));
-    if (form.countryOfOrigin) fd.append("countryOfOrigin", form.countryOfOrigin);
+    if (form.countryOfOrigin)
+      fd.append("countryOfOrigin", form.countryOfOrigin);
     if (form.hsCode) fd.append("hsCode", form.hsCode);
     fd.append("package", JSON.stringify(form.package));
     if (form.weight !== "") fd.append("weight", form.weight);
-    fd.append("dimensions", JSON.stringify({
-      length: form.dimensions.length || 0,
-      width: form.dimensions.width || 0,
-      height: form.dimensions.height || 0,
-    }));
+    fd.append(
+      "dimensions",
+      JSON.stringify({
+        length: form.dimensions.length || 0,
+        width: form.dimensions.width || 0,
+        height: form.dimensions.height || 0,
+      }),
+    );
     fd.append("seo", JSON.stringify(form.seo));
     fd.append("status", form.status);
     fd.append("featured", form.featured);
@@ -954,7 +1186,9 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
       .filter((v) => v.type.trim())
       .map((v) => ({
         type: v.type,
-        options: v.options.filter((o) => o.label.trim()).map((o) => ({ label: o.label })),
+        options: v.options
+          .filter((o) => o.label.trim())
+          .map((o) => ({ label: o.label })),
       }));
     fd.append("variants", JSON.stringify(cleanVariants));
     if (isEdit) fd.append("existingImages", JSON.stringify(existingImages));
@@ -962,10 +1196,15 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
 
     try {
       loader?.(true);
-      const action = isEdit ? updateProductById(id, fd, router) : createProduct(fd, router);
+      const action = isEdit
+        ? updateProductById(id, fd, router)
+        : createProduct(fd, router);
       const res = await action(dispatch);
       if (res?.status) {
-        toaster?.({ type: "success", message: isEdit ? "Product updated" : "Product created" });
+        toaster?.({
+          type: "success",
+          message: isEdit ? "Product updated" : "Product created",
+        });
         router.push("/products");
       } else {
         toaster?.({ type: "error", message: res?.message || "Failed to save" });
@@ -1005,11 +1244,12 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
       <div className="flex flex-col lg:flex-row gap-5 items-start">
         {/* ── Left column ── */}
         <div className="flex-1 min-w-0 w-full space-y-4">
-
           {/* Title + Description */}
           <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Title</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Title
+              </label>
               <input
                 value={form.name}
                 onChange={(e) => set("name", e.target.value)}
@@ -1018,7 +1258,9 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Description</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Description
+              </label>
               <TipTapEditor
                 value={form.description}
                 onChange={(val) => set("description", val)}
@@ -1033,18 +1275,26 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
               existingImages={existingImages}
               newFiles={newImageFiles}
               onAddFiles={handleAddFiles}
-              onRemoveExisting={(i) => setExistingImages((p) => p.filter((_, idx) => idx !== i))}
-              onRemoveNew={(i) => setNewImageFiles((p) => p.filter((_, idx) => idx !== i))}
+              onRemoveExisting={(i) =>
+                setExistingImages((p) => p.filter((_, idx) => idx !== i))
+              }
+              onRemoveNew={(i) =>
+                setNewImageFiles((p) => p.filter((_, idx) => idx !== i))
+              }
             />
           </div>
 
           {/* Product meta */}
           <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
-            <h3 className="text-sm font-semibold text-gray-900">Product meta</h3>
+            <h3 className="text-sm font-semibold text-gray-900">
+              Product meta
+            </h3>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Product type</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  Product type
+                </label>
                 <select
                   value={form.productType}
                   onChange={(e) => set("productType", e.target.value)}
@@ -1052,13 +1302,17 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
                 >
                   <option value="">Select</option>
                   {taxonomy.product_type.map((opt) => (
-                    <option key={opt} value={opt}>{opt}</option>
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Skin Type</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  Skin Type
+                </label>
                 <select
                   value={form.skinType}
                   onChange={(e) => set("skinType", e.target.value)}
@@ -1066,13 +1320,17 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
                 >
                   <option value="">Select</option>
                   {taxonomy.skin_type.map((opt) => (
-                    <option key={opt} value={opt}>{opt}</option>
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">Age</label>
+                <label className="block text-xs font-medium text-gray-600 mb-1">
+                  Age
+                </label>
                 <select
                   value={form.age}
                   onChange={(e) => set("age", e.target.value)}
@@ -1080,7 +1338,9 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
                 >
                   <option value="">Select</option>
                   {taxonomy.age.map((opt) => (
-                    <option key={opt} value={opt}>{opt}</option>
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -1099,11 +1359,17 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
           {/* Pricing */}
           <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Price</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Price
+              </label>
               <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden max-w-xs">
-                <span className="px-3 py-2 text-sm text-gray-500 bg-gray-50 border-r border-gray-300">₹</span>
+                <span className="px-3 py-2 text-sm text-gray-500 bg-gray-50 border-r border-gray-300">
+                  ₹
+                </span>
                 <input
-                  type="number" min="0" step="0.01"
+                  type="number"
+                  min="0"
+                  step="0.01"
                   value={form.price}
                   onChange={(e) => set("price", e.target.value)}
                   placeholder="0.00"
@@ -1119,7 +1385,11 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
                 className="flex items-center justify-between w-full text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
               >
                 <span>Additional display prices</span>
-                {pricingOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                {pricingOpen ? (
+                  <ChevronUp size={14} />
+                ) : (
+                  <ChevronDown size={14} />
+                )}
               </button>
               {pricingOpen && (
                 <div className="mt-4 space-y-4">
@@ -1129,11 +1399,17 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
                         Compare-at price
                       </label>
                       <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
-                        <span className="px-3 py-2 text-sm text-gray-500 bg-gray-50 border-r border-gray-300">₹</span>
+                        <span className="px-3 py-2 text-sm text-gray-500 bg-gray-50 border-r border-gray-300">
+                          ₹
+                        </span>
                         <input
-                          type="number" min="0" step="0.01"
+                          type="number"
+                          min="0"
+                          step="0.01"
                           value={form.compareAtPrice}
-                          onChange={(e) => set("compareAtPrice", e.target.value)}
+                          onChange={(e) =>
+                            set("compareAtPrice", e.target.value)
+                          }
                           placeholder="0.00"
                           className="flex-1 px-3 py-2 text-sm text-gray-800 outline-none"
                         />
@@ -1153,7 +1429,8 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
                           <option value="percentage">%</option>
                         </select>
                         <input
-                          type="number" min="0"
+                          type="number"
+                          min="0"
                           value={form.discountValue}
                           onChange={(e) => set("discountValue", e.target.value)}
                           placeholder="0"
@@ -1169,7 +1446,9 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
                       onChange={(e) => set("chargeTax", e.target.checked)}
                       className="w-4 h-4 rounded border-gray-300 accent-gray-900"
                     />
-                    <span className="text-sm text-gray-700">Charge tax on this product</span>
+                    <span className="text-sm text-gray-700">
+                      Charge tax on this product
+                    </span>
                   </label>
                 </div>
               )}
@@ -1177,18 +1456,26 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
 
             {/* Cost per item */}
             <div className="border-t border-gray-100 pt-3">
-              <label className="block text-xs font-medium text-gray-600 mb-1">Cost per item</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Cost per item
+              </label>
               <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden max-w-xs">
-                <span className="px-3 py-2 text-sm text-gray-500 bg-gray-50 border-r border-gray-300">₹</span>
+                <span className="px-3 py-2 text-sm text-gray-500 bg-gray-50 border-r border-gray-300">
+                  ₹
+                </span>
                 <input
-                  type="number" min="0" step="0.01"
+                  type="number"
+                  min="0"
+                  step="0.01"
                   value={form.costPerItem}
                   onChange={(e) => set("costPerItem", e.target.value)}
                   placeholder="—"
                   className="flex-1 px-3 py-2 text-sm text-gray-800 outline-none"
                 />
               </div>
-              <p className="text-xs text-gray-400 mt-1">Customers won't see this</p>
+              <p className="text-xs text-gray-400 mt-1">
+                Customers won't see this
+              </p>
             </div>
           </div>
 
@@ -1207,8 +1494,12 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
             {form.trackInventory && (
               <div className="border border-gray-200 rounded-lg overflow-hidden mb-3">
                 <div className="grid grid-cols-2 px-4 py-2 bg-gray-50 border-b border-gray-200">
-                  <span className="text-xs font-medium text-gray-600">Location</span>
-                  <span className="text-xs font-medium text-gray-600 text-right">Quantity</span>
+                  <span className="text-xs font-medium text-gray-600">
+                    Location
+                  </span>
+                  <span className="text-xs font-medium text-gray-600 text-right">
+                    Quantity
+                  </span>
                 </div>
                 <div className="grid grid-cols-2 items-center px-4 py-2.5">
                   <span className="text-sm text-gray-700">Shop location</span>
@@ -1229,13 +1520,19 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
                 className="flex items-center justify-between w-full text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
               >
                 <span>More details</span>
-                {inventoryOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                {inventoryOpen ? (
+                  <ChevronUp size={14} />
+                ) : (
+                  <ChevronDown size={14} />
+                )}
               </button>
               {inventoryOpen && (
                 <div className="mt-4 space-y-4">
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">SKU (Stock Keeping Unit)</label>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        SKU (Stock Keeping Unit)
+                      </label>
                       <input
                         value={form.sku}
                         onChange={(e) => set("sku", e.target.value)}
@@ -1244,7 +1541,9 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium text-gray-600 mb-1">Barcode (ISBN, UPC, GTIN, etc.)</label>
+                      <label className="block text-xs font-medium text-gray-600 mb-1">
+                        Barcode (ISBN, UPC, GTIN, etc.)
+                      </label>
                       <input
                         value={form.barcode}
                         onChange={(e) => set("barcode", e.target.value)}
@@ -1258,12 +1557,18 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
                       <input
                         type="checkbox"
                         checked={form.continueSellingWhenOutOfStock}
-                        onChange={(e) => set("continueSellingWhenOutOfStock", e.target.checked)}
+                        onChange={(e) =>
+                          set("continueSellingWhenOutOfStock", e.target.checked)
+                        }
                         className="w-4 h-4 rounded border-gray-300 accent-gray-900"
                       />
-                      <span className="text-sm text-gray-700">Continue selling when out of stock</span>
+                      <span className="text-sm text-gray-700">
+                        Continue selling when out of stock
+                      </span>
                     </label>
-                    <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">POS excluded</span>
+                    <span className="text-xs font-medium text-gray-500 bg-gray-100 px-2.5 py-1 rounded-full">
+                      POS excluded
+                    </span>
                   </div>
                 </div>
               )}
@@ -1276,7 +1581,10 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
               <h3 className="text-sm font-semibold text-gray-900">Shipping</h3>
               <label className="flex items-center gap-2 cursor-pointer">
                 <span className="text-xs text-gray-500">Physical product</span>
-                <Toggle checked={form.physicalProduct} onChange={(val) => set("physicalProduct", val)} />
+                <Toggle
+                  checked={form.physicalProduct}
+                  onChange={(val) => set("physicalProduct", val)}
+                />
               </label>
             </div>
 
@@ -1284,15 +1592,25 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
               <>
                 {/* Package */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-600 mb-1">Package</label>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    Package
+                  </label>
                   <button
                     onClick={() => setPackageModalOpen(true)}
                     className="flex items-center gap-2.5 w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
                   >
-                    <span className="text-base">{PKG_TYPES.find((t) => t.value === form.package.type)?.icon || "📦"}</span>
+                    <span className="text-base">
+                      {PKG_TYPES.find((t) => t.value === form.package.type)
+                        ?.icon || "📦"}
+                    </span>
                     <span>
-                      {form.package.name || PKG_TYPES.find((t) => t.value === form.package.type)?.label || "Box"}
-                      {form.package.length && form.package.width && form.package.height
+                      {form.package.name ||
+                        PKG_TYPES.find((t) => t.value === form.package.type)
+                          ?.label ||
+                        "Box"}
+                      {form.package.length &&
+                      form.package.width &&
+                      form.package.height
                         ? ` · ${form.package.length} × ${form.package.width} × ${form.package.height} ${form.package.dimensionUnit}`
                         : ""}
                     </span>
@@ -1302,9 +1620,13 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
                 {/* Weight */}
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Product weight</label>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Product weight
+                    </label>
                     <input
-                      type="number" min="0" step="0.01"
+                      type="number"
+                      min="0"
+                      step="0.01"
                       value={form.weight}
                       onChange={(e) => set("weight", e.target.value)}
                       placeholder="0.0"
@@ -1312,13 +1634,17 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-medium text-gray-600 mb-1">Unit</label>
+                    <label className="block text-xs font-medium text-gray-600 mb-1">
+                      Unit
+                    </label>
                     <select
                       value={form.weightUnit}
                       onChange={(e) => set("weightUnit", e.target.value)}
                       className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none bg-white"
                     >
-                      {WEIGHT_UNITS.map((u) => <option key={u}>{u}</option>)}
+                      {WEIGHT_UNITS.map((u) => (
+                        <option key={u}>{u}</option>
+                      ))}
                     </select>
                   </div>
                 </div>
@@ -1330,28 +1656,48 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
                     className="flex items-center justify-between w-full text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
                   >
                     <span>Customs information</span>
-                    {customsOpen ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                    {customsOpen ? (
+                      <ChevronUp size={14} />
+                    ) : (
+                      <ChevronDown size={14} />
+                    )}
                   </button>
                   {customsOpen && (
                     <div className="mt-4 space-y-3">
                       <div>
                         <label className="flex items-center gap-1 text-xs font-medium text-gray-600 mb-1">
                           Country/Region of origin
-                          <span title="Where the product is manufactured or assembled" className="w-3.5 h-3.5 flex items-center justify-center bg-gray-300 text-white rounded-full text-[9px] cursor-help">i</span>
+                          <span
+                            title="Where the product is manufactured or assembled"
+                            className="w-3.5 h-3.5 flex items-center justify-center bg-gray-300 text-white rounded-full text-[9px] cursor-help"
+                          >
+                            i
+                          </span>
                         </label>
                         <select
                           value={form.countryOfOrigin}
-                          onChange={(e) => set("countryOfOrigin", e.target.value)}
+                          onChange={(e) =>
+                            set("countryOfOrigin", e.target.value)
+                          }
                           className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none bg-white"
                         >
                           <option value="">Select</option>
-                          {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                          {COUNTRIES.map((c) => (
+                            <option key={c} value={c}>
+                              {c}
+                            </option>
+                          ))}
                         </select>
                       </div>
                       <div>
                         <label className="flex items-center gap-1 text-xs font-medium text-gray-600 mb-1">
                           Harmonized System (HS) code
-                          <span title="A 6-digit international commodity code used for customs" className="w-3.5 h-3.5 flex items-center justify-center bg-gray-300 text-white rounded-full text-[9px] cursor-help">i</span>
+                          <span
+                            title="A 6-digit international commodity code used for customs"
+                            className="w-3.5 h-3.5 flex items-center justify-center bg-gray-300 text-white rounded-full text-[9px] cursor-help"
+                          >
+                            i
+                          </span>
                         </label>
                         <input
                           value={form.hsCode}
@@ -1397,22 +1743,30 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none bg-white"
             >
               {STATUS_OPTIONS.map((s) => (
-                <option key={s.value} value={s.value}>{s.label}</option>
+                <option key={s.value} value={s.value}>
+                  {s.label}
+                </option>
               ))}
             </select>
           </div>
 
           {/* Publishing */}
           <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <h3 className="text-sm font-semibold text-gray-900 mb-2">Publishing</h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">
+              Publishing
+            </h3>
             <p className="text-sm text-gray-600">All channels</p>
           </div>
 
           {/* Product organization */}
           <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
-            <h3 className="text-sm font-semibold text-gray-900">Product organization</h3>
+            <h3 className="text-sm font-semibold text-gray-900">
+              Product organization
+            </h3>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Vendor / Brand</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Vendor / Brand
+              </label>
               <input
                 value={form.brand}
                 onChange={(e) => set("brand", e.target.value)}
@@ -1421,7 +1775,9 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Collections</label>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Collections
+              </label>
               <select
                 value={form.collection}
                 onChange={(e) => set("collection", e.target.value)}
@@ -1429,13 +1785,20 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
               >
                 <option value="">None</option>
                 {collections.map((c) => (
-                  <option key={c._id} value={c._id}>{c.name}</option>
+                  <option key={c._id} value={c._id}>
+                    {c.name}
+                  </option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-600 mb-1">Tags</label>
-              <TagsInput tags={form.tags} onChange={(val) => set("tags", val)} />
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Tags
+              </label>
+              <TagsInput
+                tags={form.tags}
+                onChange={(val) => set("tags", val)}
+              />
             </div>
             <label className="flex items-center gap-2 cursor-pointer">
               <input
@@ -1450,7 +1813,9 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
 
           {/* Theme template */}
           <div className="bg-white rounded-xl border border-gray-200 p-5">
-            <h3 className="text-sm font-semibold text-gray-900 mb-3">Theme template</h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-3">
+              Theme template
+            </h3>
             <select className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none bg-white">
               <option>Default product</option>
             </select>
