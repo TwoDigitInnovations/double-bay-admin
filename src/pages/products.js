@@ -1,10 +1,36 @@
 import { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Download, Plus, Tag, Trash2 } from "lucide-react";
+import { Download, Plus, Tag, Trash2, Upload } from "lucide-react";
 import isAuth from "@/components/isAuth";
 import Table, { AvatarCell, StatusPill } from "@/components/table";
 import { deleteProductById, fetchProducts } from "@/redux/actions/productActions";
 import { useRouter } from "next/router";
+
+// ── CSV Export utility ───────────────────────────────────────────────────────
+
+function exportToCSV(products, filename = "products.csv") {
+  const headers = ["Product Name", "Price", "Category", "Status", "Stock"];
+  const rows = products.map((p) => [
+    p.name || "",
+    p.finalPrice || p.price || 0,
+    p.category || "",
+    p.status || "",
+    p.stock || 0,
+  ]);
+
+  const csvContent = [
+    headers.join(","),
+    ...rows.map((row) =>
+      row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
+    ),
+  ].join("\n");
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+}
 function InventoryCell({ row }) {
   const { trackInventory, stock, variants } = row.original;
   if (!trackInventory) {
@@ -42,6 +68,15 @@ const COLUMNS = (onDelete) => [
     Header: "Inventory",
     accessor: "stock",
     Cell: InventoryCell,
+  },
+  {
+    Header: "Price",
+    accessor: "finalPrice",
+    Cell: ({ value, row }) => (
+      <span className="text-sm font-medium text-gray-900">
+        ${Number(value || row.original.price || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+      </span>
+    ),
   },
   {
     Header: "Category",
@@ -189,6 +224,31 @@ function Products() {
     }
   };
 
+  const handleExport = () => {
+    exportToCSV(products, `products-${new Date().toISOString().split('T')[0]}.csv`);
+  };
+
+  const handleImport = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".csv";
+    input.onchange = (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const csv = ev.target?.result;
+          window.alert("CSV import functionality coming soon! Please add products manually for now.");
+        } catch (err) {
+          window.alert("Error reading file: " + err);
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  };
+
   const columns = useMemo(() => COLUMNS(handleDelete), [products.length]);
 
   return (
@@ -200,7 +260,18 @@ function Products() {
         </h1>
         {products.length > 0 && (
           <div className="flex items-center gap-2">
-            <button className="hidden sm:flex items-center gap-2 border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium px-3 py-1.5 rounded-lg transition-colors">
+            <button
+              onClick={handleExport}
+              disabled={loading}
+              className="hidden sm:flex items-center gap-2 border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
+            >
+              <Upload size={14} />
+              Export
+            </button>
+            <button
+              onClick={handleImport}
+              className="hidden sm:flex items-center gap-2 border border-gray-300 hover:bg-gray-50 text-gray-700 text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
+            >
               <Download size={14} />
               Import
             </button>

@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import { useDispatch, useSelector } from "react-redux";
-import { Tag, Upload, X, ChevronRight, Tag as TagIcon, ShoppingCart, Truck } from "lucide-react";
+import { Tag, Upload, X, ChevronRight, Tag as TagIcon, ShoppingCart, Truck, Trash2 } from "lucide-react";
 import isAuth from "@/components/isAuth";
 import Table, { StatusPill } from "@/components/table";
-import { fetchDiscounts } from "@/redux/actions/discountActions";
+import { fetchDiscounts, deleteDiscountById } from "@/redux/actions/discountActions";
 
 // ── Illustration ──────────────────────────────────────────────────────────────
 
@@ -132,7 +132,7 @@ function DiscountTypeModal({ onClose, onSelect }) {
 
 // ── Table columns ─────────────────────────────────────────────────────────────
 
-const COLUMNS = [
+const COLUMNS = (onDelete) => [
   {
     Header: "Title / Code",
     accessor: "code",
@@ -187,6 +187,24 @@ const COLUMNS = [
     accessor: "status",
     Cell: ({ value }) => <StatusPill value={value} />,
   },
+  {
+    Header: "",
+    id: "actions",
+    disableSortBy: true,
+    Cell: ({ row }) => (
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete?.(row.original?._id);
+        }}
+        className="p-2 text-red-500 hover:text-red-700"
+        aria-label="Delete"
+      >
+        <Trash2 size={16} />
+      </button>
+    ),
+  },
 ];
 
 // ── Page ──────────────────────────────────────────────────────────────────────
@@ -201,7 +219,20 @@ function Discounts() {
     dispatch(fetchDiscounts(router));
   }, [dispatch]);
 
-  const columns = useMemo(() => COLUMNS, []);
+  const handleDelete = async (id) => {
+    if (!id) return;
+    if (!window.confirm("Delete this discount?")) return;
+    try {
+      const res = await dispatch(deleteDiscountById(id, router));
+      if (!res?.status) {
+        window.alert(res?.message || "Could not delete");
+      }
+    } catch (e) {
+      window.alert(e?.message || "Could not delete");
+    }
+  };
+
+  const columns = useMemo(() => COLUMNS(handleDelete), [discounts.length]);
 
   const handleSelect = (type) => {
     setModalOpen(false);

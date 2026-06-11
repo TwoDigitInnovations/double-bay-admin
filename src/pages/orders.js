@@ -1,75 +1,92 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/router";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  InboxIcon,
-  ChevronDown,
-  ChevronLeft,
-  ChevronRight,
-  Plus,
-} from "lucide-react";
+import { InboxIcon, ChevronDown, Plus } from "lucide-react";
 import isAuth from "@/components/isAuth";
 import Table from "@/components/table";
 import { fetchOrders } from "@/redux/actions/orderActions";
+import { fetchOrderStats } from "@/redux/actions/orderAnalyticsActions";
 
 // ── Analytics bar ───────────────────────────────────────────────────────────
 
-function StatCard({ label, value }) {
-  return (
-    <div className="flex-1 min-w-0 px-6 py-3 border-r border-gray-200 last:border-r-0">
-      <p className="text-xs text-gray-500 mb-0.5">{label}</p>
-      <div className="flex items-center gap-2">
-        <span className="text-sm font-semibold text-gray-900">{value}</span>
-        <span className="text-xs text-gray-400">—</span>
-      </div>
-      <div className="mt-2 h-0.5 w-10 bg-blue-400 rounded-full" />
-    </div>
-  );
-}
+function AnalyticsBar({ todayStats, dateRange, setDateRange }) {
+  console.log("[AnalyticsBar] Received todayStats:", todayStats);
 
-function AnalyticsBar({ orders }) {
-  const today = new Date().toDateString();
-  const todayOrders = orders.filter(
-    (o) => new Date(o.createdAt).toDateString() === today,
-  );
-  const itemsOrdered = todayOrders.reduce(
-    (sum, o) => sum + (o.itemCount ?? o.items?.length ?? 0),
-    0,
-  );
-  const returns = todayOrders
-    .filter((o) => o.paymentStatus === "refunded" || o.orderStatus === "returned")
-    .reduce((sum, o) => sum + (o.total || 0), 0);
-  const fulfilled = todayOrders.filter(
-    (o) => o.orderStatus === "delivered" || o.fulfillmentStatus === "fulfilled",
-  ).length;
+  const rangeLabels = {
+    today: "Today",
+    week: "Week",
+    month: "Month",
+    all: "All",
+  };
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 mb-4 flex items-stretch overflow-x-auto">
-      <div className="flex items-center gap-1.5 px-4 py-3 border-r border-gray-200 shrink-0">
-        <ChevronLeft size={14} className="text-gray-400" />
-        <span className="text-xs font-medium text-gray-700 flex items-center gap-1.5">
-          <svg
-            width="13"
-            height="13"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            className="text-gray-400"
+    <div className="bg-white rounded-xl border border-gray-200 mb-4 overflow-hidden">
+      {/* Date Range Selector */}
+      <div className="flex gap-1 px-4 py-3 border-b border-gray-100 overflow-x-auto">
+        {Object.entries(rangeLabels).map(([key, label]) => (
+          <button
+            key={key}
+            onClick={() => setDateRange(key)}
+            className={`px-2 sm:px-3 py-1.5 rounded-lg text-xs font-medium whitespace-nowrap transition-colors ${
+              dateRange === key
+                ? "bg-gray-900 text-white"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
           >
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-            <line x1="16" y1="2" x2="16" y2="6" />
-            <line x1="8" y1="2" x2="8" y2="6" />
-            <line x1="3" y1="10" x2="21" y2="10" />
-          </svg>
-          Today
-        </span>
-        <ChevronRight size={14} className="text-gray-400" />
+            {label}
+          </button>
+        ))}
       </div>
-      <StatCard label="Orders" value={todayOrders.length} />
-      <StatCard label="Items ordered" value={itemsOrdered} />
-      <StatCard label="Returns" value={`$${Number(returns).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`} />
-      <StatCard label="Orders fulfilled" value={fulfilled} />
+
+      {/* Stats Grid */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-0 divide-x divide-gray-100">
+        <div className="flex-1 min-w-0 px-3 sm:px-6 py-3 sm:py-4">
+          <p className="text-xs text-gray-500 mb-0.5">Orders</p>
+          <div className="flex items-center gap-2">
+            <span className="text-sm sm:text-base font-semibold text-gray-900 truncate">
+              {todayStats?.orders}
+            </span>
+            <span className="text-xs text-gray-400">—</span>
+          </div>
+          <div className="mt-2 h-0.5 w-8 bg-blue-400 rounded-full" />
+        </div>
+
+        <div className="flex-1 min-w-0 px-3 sm:px-6 py-3 sm:py-4">
+          <p className="text-xs text-gray-500 mb-0.5">Items ordered</p>
+          <div className="flex items-center gap-2">
+            <span className="text-sm sm:text-base font-semibold text-gray-900 truncate">
+              {todayStats?.itemsOrdered}
+            </span>
+            <span className="text-xs text-gray-400">—</span>
+          </div>
+          <div className="mt-2 h-0.5 w-8 bg-blue-400 rounded-full" />
+        </div>
+
+        <div className="flex-1 min-w-0 px-3 sm:px-6 py-3 sm:py-4">
+          <p className="text-xs text-gray-500 mb-0.5">Returns</p>
+          <div className="flex items-center gap-2">
+            <span className="text-sm sm:text-base font-semibold text-gray-900 truncate">
+              $
+              {Number(todayStats?.returns || 0).toLocaleString("en-US", {
+                maximumFractionDigits: 0,
+              })}
+            </span>
+            <span className="text-xs text-gray-400">—</span>
+          </div>
+          <div className="mt-2 h-0.5 w-8 bg-blue-400 rounded-full" />
+        </div>
+
+        <div className="flex-1 min-w-0 px-3 sm:px-6 py-3 sm:py-4">
+          <p className="text-xs text-gray-500 mb-0.5">Fulfilled</p>
+          <div className="flex items-center gap-2">
+            <span className="text-sm sm:text-base font-semibold text-gray-900 truncate">
+              {todayStats.fulfilled}
+            </span>
+            <span className="text-xs text-gray-400">—</span>
+          </div>
+          <div className="mt-2 h-0.5 w-8 bg-blue-400 rounded-full" />
+        </div>
+      </div>
     </div>
   );
 }
@@ -130,7 +147,16 @@ function OrderIllustration() {
       <circle cx="70" cy="70" r="70" fill="#e8f5f3" />
       <ellipse cx="70" cy="118" rx="42" ry="12" fill="#00806050" />
       {/* Receipt/document */}
-      <rect x="38" y="28" width="64" height="80" rx="6" fill="white" stroke="#e5e7eb" strokeWidth="1.5" />
+      <rect
+        x="38"
+        y="28"
+        width="64"
+        height="80"
+        rx="6"
+        fill="white"
+        stroke="#e5e7eb"
+        strokeWidth="1.5"
+      />
       {/* Top blue bar */}
       <rect x="50" y="42" width="28" height="4" rx="2" fill="#3b82f6" />
       {/* Product row 1 */}
@@ -201,7 +227,13 @@ const COLUMNS = [
     accessor: "createdAt",
     Cell: ({ value }) => (
       <span className="text-sm text-gray-600">
-        {value ? new Date(value).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "—"}
+        {value
+          ? new Date(value).toLocaleDateString("en-IN", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })
+          : "—"}
       </span>
     ),
   },
@@ -230,7 +262,9 @@ const COLUMNS = [
     Header: "Items",
     accessor: "itemCount",
     Cell: ({ value, row }) => {
-      const count = value ?? (Array.isArray(row.original.items) ? row.original.items.length : 0);
+      const count =
+        value ??
+        (Array.isArray(row.original.items) ? row.original.items.length : 0);
       return (
         <span className="text-sm text-gray-600">
           {count} item{count !== 1 ? "s" : ""}
@@ -243,7 +277,13 @@ const COLUMNS = [
     accessor: "total",
     Cell: ({ value }) => (
       <span className="text-sm font-medium text-gray-900">
-        ${value != null ? Number(value).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00"}
+        $
+        {value != null
+          ? Number(value).toLocaleString("en-US", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })
+          : "0.00"}
       </span>
     ),
   },
@@ -277,16 +317,19 @@ function EmptyState() {
   );
 }
 
-// ── Page ──────────────────────────────────────────────────────────────────────
-
 function Orders() {
   const router = useRouter();
   const dispatch = useDispatch();
   const { orders, loading, error, total } = useSelector((state) => state.order);
+  const { todayStats } = useSelector((state) => state.orderAnalytics);
+  const [dateRange, setDateRange] = useState("today");
 
   useEffect(() => {
+    console.log("[Orders] useEffect called with dateRange:", dateRange);
     dispatch(fetchOrders(router));
-  }, [dispatch, router]);
+    console.log("[Orders] Dispatching fetchOrderStats with range:", dateRange);
+    dispatch(fetchOrderStats(router, dateRange));
+  }, [dispatch, router, dateRange]);
 
   const columns = useMemo(() => COLUMNS, []);
 
@@ -311,7 +354,13 @@ function Orders() {
       )}
 
       {/* Analytics bar */}
-      {!loading && orders.length > 0 && <AnalyticsBar orders={orders} />}
+      {!loading && orders.length > 0 && (
+        <AnalyticsBar
+          todayStats={todayStats}
+          dateRange={dateRange}
+          setDateRange={setDateRange}
+        />
+      )}
 
       {/* Content */}
       {loading ? (

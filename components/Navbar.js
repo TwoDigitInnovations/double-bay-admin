@@ -198,7 +198,7 @@ export default function Navbar({ setOpen }) {
         onCancel={() => setShowLogoutModal(false)}
       />
     )}
-    <nav className="fixed top-0 left-0 right-0 h-12 bg-[#1C1C1C] z-50 flex items-center px-4">
+    <nav className="fixed top-0 left-0 right-0 h-13 bg-[#1C1C1C] z-50 flex items-center px-4">
       {/* Left — brand */}
       <div className="flex items-center gap-3 shrink-0">
         <button
@@ -207,9 +207,8 @@ export default function Navbar({ setOpen }) {
         >
           <FiMenu size={20} />
         </button>
-        <span className="text-white font-semibold text-sm tracking-wide">
-          2 Digit
-        </span>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo12.png" alt="Logo" className="h-10 object-contain" />
       </div>
 
       {/* Center — search (absolutely centered) */}
