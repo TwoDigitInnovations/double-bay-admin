@@ -172,6 +172,32 @@ function InventoryEmpty() {
   );
 }
 
+// ── CSV Export utility ───────────────────────────────────────────────────────
+
+function exportToCSV(products, filename = "inventory.csv") {
+  const headers = ["Product Name", "SKU", "Stock", "Unavailable", "Committed"];
+  const rows = products.map((p) => [
+    p.name || "",
+    p.sku || "",
+    p.stock || 0,
+    p.unavailable || 0,
+    p.committed || 0,
+  ]);
+
+  const csvContent = [
+    headers.join(","),
+    ...rows.map((row) =>
+      row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(",")
+    ),
+  ].join("\n");
+
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  link.click();
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 function Inventory() {
@@ -194,6 +220,31 @@ function Inventory() {
     }
   };
 
+  const handleExport = () => {
+    exportToCSV(products, `inventory-${new Date().toISOString().split('T')[0]}.csv`);
+  };
+
+  const handleImport = () => {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".csv";
+    input.onchange = (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const csv = ev.target?.result;
+          window.alert("CSV import functionality coming soon! Please update inventory manually for now.");
+        } catch (err) {
+          window.alert("Error reading file: " + err);
+        }
+      };
+      reader.readAsText(file);
+    };
+    input.click();
+  };
+
   const columns = useMemo(() => COLUMNS(handleDelete), [products.length]);
 
   return (
@@ -205,11 +256,18 @@ function Inventory() {
           Inventory
         </h1>
         <div className="flex items-center gap-2">
-          <button className="hidden sm:flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-3 py-1.5 rounded-lg transition-colors">
+          <button
+            onClick={handleExport}
+            disabled={loading || products.length === 0}
+            className="hidden sm:flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
+          >
             <Upload size={13} />
             Export
           </button>
-          <button className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-3 py-1.5 rounded-lg transition-colors">
+          <button
+            onClick={handleImport}
+            className="flex items-center gap-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium px-3 py-1.5 rounded-lg transition-colors"
+          >
             <Download size={13} />
             Import
           </button>

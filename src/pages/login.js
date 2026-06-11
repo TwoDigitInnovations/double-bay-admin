@@ -52,15 +52,14 @@ export default function Login(props) {
         <div className="w-full max-w-sm">
 
           {/* Brand */}
-          <div className="flex items-center justify-center gap-2.5 mb-8">
-            <div className="w-8 h-8 bg-[#008060] rounded-lg flex items-center justify-center text-white text-xs font-bold">
-              2D
-            </div>
-            <span className="text-lg font-semibold text-gray-900">2 Digit Admin</span>
-          </div>
+        
 
           {/* Card */}
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-8">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+              <div className="flex items-center justify-center mb-0 bg-white  rounded-2xl ">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/logo-doublebay.png" alt="Logo" className="h-24 object-contain" />
+          </div>
             <h1 className="text-xl font-bold text-gray-900 mb-1">Welcome back</h1>
             <p className="text-sm text-gray-500 mb-7">Sign in to your admin account</p>
 
@@ -155,7 +154,7 @@ export default function Login(props) {
           >
             Privacy Policy
           </button>
-          , and to receive updates from 2 Digit.{" "}
+          , and to receive updates from DoubleBay.{" "}
           <button className="text-gray-400 hover:underline">Unsubscribe anytime.</button>
         </p>
       </div>

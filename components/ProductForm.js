@@ -1136,8 +1136,8 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
     }
 
     const totalImages = existingImages.length + newImageFiles.length;
-    if (totalImages < 2) {
-      toaster?.({ type: "error", message: "Please upload at least 2 images" });
+    if (totalImages < 1) {
+      toaster?.({ type: "error", message: "Please upload at least 1 product image" });
       return;
     }
 

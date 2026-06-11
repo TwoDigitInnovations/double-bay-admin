@@ -55,7 +55,7 @@ function NotificationsPage() {
   };
 
   return (
-    <div className="p-4 md:p-6 max-w-3xl mx-auto">
+    <div className="p-4 md:p-6 max-w-7xl mx-auto">
       <div className="mb-6">
         <h1 className="text-xl font-bold text-gray-900">Notifications</h1>
         <p className="mt-1 text-sm text-gray-500">

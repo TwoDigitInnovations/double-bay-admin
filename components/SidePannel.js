@@ -124,14 +124,14 @@ function SidePannel({ open, setOpen }) {
       >
         {/* Store header */}
         <div className="px-2 pt-2 pb-1 flex items-center gap-1 shrink-0">
-          <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg hover:bg-black/8 cursor-pointer flex-1 min-w-0">
-            <div className="w-6 h-6 bg-[#008060] rounded-md flex items-center justify-center text-white text-[10px] font-bold shrink-0">
-              2D
+          <div className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg   flex-1 min-w-0">
+            <div className="w-6 h-6 bg-[#1a1a1a] rounded-md flex items-center justify-center text-white text-[10px] font-bold shrink-0">
+              DB
             </div>
             <span className="text-[13px] font-medium text-gray-800 truncate flex-1">
-              2 Digit Admin
+              DoubleBay
             </span>
-            <ChevronDown size={14} className="text-gray-500 shrink-0" />
+            {/* <ChevronDown size={14} className="text-gray-500 shrink-0" /> */}
           </div>
           <button
             className="md:hidden p-1.5 text-gray-500 hover:text-gray-800 shrink-0"
