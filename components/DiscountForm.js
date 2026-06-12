@@ -17,6 +17,7 @@ import {
   updateDiscountById,
   fetchDiscountById,
 } from "@/redux/actions/discountActions";
+import { Api } from "@/services/service";
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -45,14 +46,6 @@ function randomCode() {
 
 function todayStr() {
   return new Date().toISOString().split("T")[0];
-}
-
-function nowTimeStr() {
-  return new Date().toLocaleTimeString("en-US", {
-    hour: "2-digit",
-    minute: "2-digit",
-    hour12: true,
-  });
 }
 
 function toISO(dateStr, timeStr) {
@@ -144,18 +137,26 @@ function Checkbox({ checked, onChange, children }) {
   );
 }
 
-function SearchBrowse({ placeholder }) {
+function SearchBrowse({ placeholder, onBrowse, selectedCount = 0 }) {
+  const [searchQuery, setSearchQuery] = useState("");
+
   return (
     <div className="flex gap-2 mt-2">
       <div className="flex-1 flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2">
         <Search size={13} className="text-gray-400 shrink-0" />
         <input
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
           placeholder={placeholder}
           className="flex-1 text-sm outline-none text-gray-700 placeholder-gray-400"
         />
       </div>
-      <button className="border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium px-4 py-2 rounded-lg transition-colors">
-        Browse
+      <button
+        type="button"
+        onClick={onBrowse}
+        className="border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+      >
+        Browse {selectedCount > 0 && <span className="text-xs ml-1">({selectedCount})</span>}
       </button>
     </div>
   );
@@ -269,7 +270,7 @@ function DiscountValueSection({ form, set }) {
 
 // ── Section: Applies to (amount_off_products) ─────────────────────────────────
 
-function AppliesToSection({ form, set }) {
+function AppliesToSection({ form, set, onBrowse }) {
   return (
     <Card>
       <div className="mb-4">
@@ -284,10 +285,18 @@ function AppliesToSection({ form, set }) {
         </Select>
       </div>
       {form.appliesTo === "specific_collections" && (
-        <SearchBrowse placeholder="Search collections" />
+        <SearchBrowse
+          placeholder="Search collections"
+          selectedCount={form.appliedCollections?.length || 0}
+          onBrowse={() => onBrowse("collections", "appliedCollections")}
+        />
       )}
       {form.appliesTo === "specific_products" && (
-        <SearchBrowse placeholder="Search products" />
+        <SearchBrowse
+          placeholder="Search products"
+          selectedCount={form.appliedProducts?.length || 0}
+          onBrowse={() => onBrowse("products", "appliedProducts")}
+        />
       )}
     </Card>
   );
@@ -295,7 +304,7 @@ function AppliesToSection({ form, set }) {
 
 // ── Section: Buy X Get Y ──────────────────────────────────────────────────────
 
-function BuyXGetYSection({ form, set }) {
+function BuyXGetYSection({ form, set, onBrowse }) {
   return (
     <>
       {/* Customer buys */}
@@ -349,6 +358,17 @@ function BuyXGetYSection({ form, set }) {
               ? "Search products"
               : "Search collections"
           }
+          selectedCount={
+            form.buyFrom === "specific_products"
+              ? form.buyProducts?.length || 0
+              : form.buyCollections?.length || 0
+          }
+          onBrowse={() =>
+            onBrowse(
+              form.buyFrom === "specific_products" ? "products" : "collections",
+              form.buyFrom === "specific_products" ? "buyProducts" : "buyCollections"
+            )
+          }
         />
       </Card>
 
@@ -385,6 +405,17 @@ function BuyXGetYSection({ form, set }) {
             form.getFrom === "specific_products"
               ? "Search products"
               : "Search collections"
+          }
+          selectedCount={
+            form.getFrom === "specific_products"
+              ? form.getProducts?.length || 0
+              : form.getCollections?.length || 0
+          }
+          onBrowse={() =>
+            onBrowse(
+              form.getFrom === "specific_products" ? "products" : "collections",
+              form.getFrom === "specific_products" ? "getProducts" : "getCollections"
+            )
           }
         />
 
@@ -833,12 +864,18 @@ const defaultForm = () => ({
   discountValue: "",
   maxDiscountAmount: "",
   appliesTo: "specific_collections",
+  appliedCollections: [],
+  appliedProducts: [],
   buyType: "min_qty",
   buyQty: "",
   buyAmount: "",
   buyFrom: "specific_products",
+  buyCollections: [],
+  buyProducts: [],
   getQty: "",
   getFrom: "specific_products",
+  getCollections: [],
+  getProducts: [],
   getDiscountType: "percentage",
   getDiscountValue: "",
   maxUsesPerOrder: false,
@@ -873,8 +910,40 @@ export default function DiscountForm({
   const [form, setForm] = useState(defaultForm());
   const [saving, setSaving] = useState(false);
   const [loadingCoupon, setLoadingCoupon] = useState(mode === "edit");
+  const [browseOpen, setBrowseOpen] = useState(false);
+  const [browseType, setBrowseType] = useState(null);
+  const [browseItems, setBrowseItems] = useState([]);
+  const [browseLoading, setBrowseLoading] = useState(false);
+  const [browseSearch, setBrowseSearch] = useState("");
+  const [browseSelected, setBrowseSelected] = useState([]);
+  const [browseField, setBrowseField] = useState(null);
 
   const set = (key, val) => setForm((prev) => ({ ...prev, [key]: val }));
+
+  const handleBrowse = async (itemType, formField) => {
+    setBrowseType(itemType);
+    setBrowseField(formField);
+    setBrowseSearch("");
+    setBrowseLoading(true);
+    setBrowseOpen(true);
+
+    try {
+      const endpoint = itemType === "products" ? "products" : "collections";
+      const res = await Api("get", `${endpoint}?limit=100`, "", router);
+      if (res?.status) {
+        setBrowseItems(res.data?.data || []);
+        setBrowseSelected(form[formField] || []);
+      } else {
+        toaster?.({ type: "error", message: `Failed to load ${itemType}` });
+        setBrowseItems([]);
+      }
+    } catch (err) {
+      toaster?.({ type: "error", message: err?.message || `Failed to load ${itemType}` });
+      setBrowseItems([]);
+    } finally {
+      setBrowseLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (mode !== "edit" || !id) return;
@@ -1044,7 +1113,7 @@ export default function DiscountForm({
           {type === "amount_off_products" && (
             <>
               <DiscountValueSection form={form} set={set} />
-              <AppliesToSection form={form} set={set} />
+              <AppliesToSection form={form} set={set} onBrowse={handleBrowse} />
               <EligibilitySection form={form} set={set} />
               <MinPurchaseSection form={form} set={set} />
               <MaxUsesSection form={form} set={set} />
@@ -1054,7 +1123,7 @@ export default function DiscountForm({
 
           {type === "buy_x_get_y" && (
             <>
-              <BuyXGetYSection form={form} set={set} />
+              <BuyXGetYSection form={form} set={set} onBrowse={handleBrowse} />
               <EligibilitySection form={form} set={set} />
               <MaxUsesSection form={form} set={set} />
               <CombinationsSection form={form} set={set} />
@@ -1106,6 +1175,118 @@ export default function DiscountForm({
           {saving ? "Saving…" : "Save"}
         </button>
       </div>
+
+      {/* Browse Modal */}
+      {browseOpen && (
+        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl border border-gray-200 max-w-2xl w-full max-h-[80vh] flex flex-col">
+            <div className="flex items-center justify-between p-5 border-b border-gray-200">
+              <h2 className="text-lg font-semibold text-gray-900">
+                Browse {browseType === "products" ? "Products" : "Collections"}
+              </h2>
+              <button
+                onClick={() => setBrowseOpen(false)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Search */}
+            <div className="p-5 border-b border-gray-200">
+              <div className="flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2">
+                <Search size={16} className="text-gray-400" />
+                <input
+                  type="text"
+                  placeholder={`Search ${browseType === "products" ? "products" : "collections"}...`}
+                  value={browseSearch}
+                  onChange={(e) => setBrowseSearch(e.target.value)}
+                  className="flex-1 outline-none text-sm text-gray-900 placeholder-gray-600"
+                />
+              </div>
+            </div>
+
+            {/* Items List */}
+            <div className="flex-1 overflow-y-auto">
+              {browseLoading ? (
+                <div className="flex items-center justify-center p-8">
+                  <div className="w-6 h-6 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+                </div>
+              ) : browseItems.length === 0 ? (
+                <div className="flex items-center justify-center p-8 text-gray-500">
+                  <p className="text-sm">No {browseType} found</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-200">
+                  {browseItems
+                    .filter((item) =>
+                      (item.name || item.title || "")
+                        .toLowerCase()
+                        .includes(browseSearch.toLowerCase()),
+                    )
+                    .map((item) => (
+                      <label
+                        key={item._id}
+                        className="flex items-center gap-3 p-4 hover:bg-gray-50 cursor-pointer transition-colors"
+                      >
+                        <input
+                          type="checkbox"
+                          checked={browseSelected.includes(item._id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setBrowseSelected([...browseSelected, item._id]);
+                            } else {
+                              setBrowseSelected(
+                                browseSelected.filter((id) => id !== item._id),
+                              );
+                            }
+                          }}
+                          className="rounded border-gray-300"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900 truncate">
+                            {item.name || item.title}
+                          </p>
+                          {item.slug && (
+                            <p className="text-xs text-gray-500 truncate">
+                              {item.slug}
+                            </p>
+                          )}
+                        </div>
+                      </label>
+                    ))}
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="flex justify-end gap-3 p-5 border-t border-gray-200">
+              <button
+                onClick={() => setBrowseOpen(false)}
+                className="border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (browseField) {
+                    set(browseField, browseSelected);
+                  }
+                  setBrowseOpen(false);
+                  toaster?.({
+                    type: "success",
+                    message: `Selected ${browseSelected.length} ${browseType}`,
+                  });
+                }}
+                disabled={browseSelected.length === 0}
+                className="bg-gray-900 hover:bg-gray-800 disabled:opacity-50 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors"
+              >
+                Select ({browseSelected.length})
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

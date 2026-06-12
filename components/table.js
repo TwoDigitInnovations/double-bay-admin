@@ -142,7 +142,19 @@ function Toggle({ checked, onChange }) {
 
 // ─── Main Table ────────────────────────────────────────────────────────────────
 
-function Table({ columns, data, pageSize: defaultPageSize = 50, emptyComponent, onRowClick }) {
+function Table({
+  columns,
+  data,
+  pageSize: defaultPageSize = 50,
+  emptyComponent,
+  onRowClick,
+  total,
+  currentPage,
+  totalPages,
+  onNextPage,
+  onPrevPage,
+  disableClientPagination,
+}) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [hideArchived, setHideArchived] = useState(false);
   const [dragOver, setDragOver] = useState(null);
@@ -236,9 +248,9 @@ function Table({ columns, data, pageSize: defaultPageSize = 50, emptyComponent, 
   };
 
   // Pagination display
-  const total = filteredData.length;
+  const clientTotal = filteredData.length;
   const from = pageIndex * pageSize + 1;
-  const to = Math.min((pageIndex + 1) * pageSize, total);
+  const to = Math.min((pageIndex + 1) * pageSize, clientTotal);
 
   return (
     <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
@@ -408,20 +420,37 @@ function Table({ columns, data, pageSize: defaultPageSize = 50, emptyComponent, 
       {/* ── Pagination ── */}
       <div className="flex items-center justify-between px-4 py-2.5 border-t border-gray-200">
         <span className="text-sm text-gray-500">
-          {total === 0 ? "0" : `${from}–${to}`}{" "}
-          {total > 0 && <span className="text-gray-400">of {total}</span>}
+          {disableClientPagination && currentPage && totalPages ? (
+            <>
+              {`${(currentPage - 1) * 20 + 1}-${Math.min(currentPage * 20, total)}`}{" "}
+              {total > 0 && <span className="text-gray-400">of {total}</span>}
+            </>
+          ) : (
+            <>
+              {clientTotal === 0 ? "0" : `${from}–${to}`}{" "}
+              {clientTotal > 0 && <span className="text-gray-400">of {clientTotal}</span>}
+            </>
+          )}
         </span>
         <div className="flex items-center gap-1">
           <button
-            onClick={() => previousPage()}
-            disabled={!canPreviousPage}
+            onClick={() => (disableClientPagination ? onPrevPage?.() : previousPage())}
+            disabled={
+              disableClientPagination
+                ? currentPage === 1
+                : !canPreviousPage
+            }
             className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronLeft size={16} className="text-gray-600" />
           </button>
           <button
-            onClick={() => nextPage()}
-            disabled={!canNextPage}
+            onClick={() => (disableClientPagination ? onNextPage?.() : nextPage())}
+            disabled={
+              disableClientPagination
+                ? currentPage === totalPages
+                : !canNextPage
+            }
             className="p-1.5 rounded-lg hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
           >
             <ChevronRight size={16} className="text-gray-600" />

@@ -96,7 +96,9 @@ export function getModuleForPath(pathname = "") {
 export function isPathAllowed(pathname) {
   const moduleId = getModuleForPath(pathname);
   if (!moduleId) return true;
-  return isModuleEnabled(moduleId);
+
+  const enabled = isModuleEnabled(moduleId);
+  return enabled;
 }
 
 /** Filter nav/search items by enabled modules. */

@@ -11,17 +11,24 @@ import {
   deleteOrder,
 } from "../slices/orderSlice";
 
-export const fetchOrders = (router, query = "") => async (dispatch) => {
+export const fetchOrders = (router, query = "", page = 1) => async (dispatch) => {
   try {
     dispatch(setLoading(true));
     dispatch(setError(null));
-    const qs = query ? (query.startsWith("?") ? query : `?${query}`) : "?limit=100";
+    const skip = (page - 1) * 20;
+    let qs;
+    if (query) {
+      qs = query.startsWith("?") ? query : `?${query}`;
+      qs += qs.includes("limit") ? "" : `&limit=20&skip=${skip}`;
+    } else {
+      qs = `?limit=20&skip=${skip}`;
+    }
     const res = await Api("get", `orders${qs}`, "", router);
     if (res?.status) {
       const list = res.data?.data || [];
       const mapped = mapApiOrdersToRows(list);
       dispatch(setOrders(mapped));
-      dispatch(setTotal(res.data?.pagination?.total ?? mapped.length));
+      dispatch(setTotal(res.data?.pagination?.total ?? res.data?.total ?? mapped.length));
     } else {
       dispatch(setOrders([]));
       dispatch(setTotal(0));

@@ -323,13 +323,28 @@ function Orders() {
   const { orders, loading, error, total } = useSelector((state) => state.order);
   const { todayStats } = useSelector((state) => state.orderAnalytics);
   const [dateRange, setDateRange] = useState("today");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 20;
+  const totalPages = Math.ceil(total / itemsPerPage);
 
   useEffect(() => {
-    console.log("[Orders] useEffect called with dateRange:", dateRange);
-    dispatch(fetchOrders(router));
+    console.log("[Orders] useEffect called with dateRange:", dateRange, "page:", currentPage);
+    dispatch(fetchOrders(router, "", currentPage));
     console.log("[Orders] Dispatching fetchOrderStats with range:", dateRange);
     dispatch(fetchOrderStats(router, dateRange));
-  }, [dispatch, router, dateRange]);
+  }, [dispatch, router, dateRange, currentPage]);
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
   const columns = useMemo(() => COLUMNS, []);
 
@@ -370,7 +385,16 @@ function Orders() {
       ) : orders.length === 0 ? (
         <EmptyState />
       ) : (
-        <Table columns={columns} data={orders} />
+        <Table
+          columns={columns}
+          data={orders}
+          total={total}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onNextPage={handleNextPage}
+          onPrevPage={handlePrevPage}
+          disableClientPagination
+        />
       )}
 
       {/* Footer */}
