@@ -211,10 +211,20 @@ function Table({
         {
           id: "_select",
           Header: ({ getToggleAllRowsSelectedProps }) => (
-            <IndeterminateCheckbox {...getToggleAllRowsSelectedProps()} />
+            <span
+              className="inline-flex"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <IndeterminateCheckbox {...getToggleAllRowsSelectedProps()} />
+            </span>
           ),
           Cell: ({ row }) => (
-            <IndeterminateCheckbox {...row.getToggleRowSelectedProps()} />
+            <span
+              className="inline-flex"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <IndeterminateCheckbox {...row.getToggleRowSelectedProps()} />
+            </span>
           ),
         },
         ...cols,

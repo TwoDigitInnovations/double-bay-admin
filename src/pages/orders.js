@@ -388,6 +388,7 @@ function Orders() {
         <Table
           columns={columns}
           data={orders}
+          onRowClick={(row) => row?._id && router.push(`/orders/${row._id}`)}
           total={total}
           currentPage={currentPage}
           totalPages={totalPages}
