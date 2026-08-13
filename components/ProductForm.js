@@ -31,6 +31,11 @@ import {
   updateProductById,
 } from "@/redux/actions/productActions";
 import { fetchCollections } from "@/redux/actions/collectionActions";
+import ProductMetafieldsSection, {
+  buildMetafieldsPayload,
+  metafieldsToValues,
+  validateMetafields,
+} from "@/components/ProductMetafields";
 import { Api } from "@/services/service";
 
 // ── Product taxonomy ──────────────────────────────────────────────────────────
@@ -113,11 +118,10 @@ function MultiSelect({
                   key={opt}
                   type="button"
                   onClick={() => toggle(opt)}
-                  className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${
-                    on
+                  className={`rounded-full px-3 py-1.5 text-sm font-medium transition ${on
                       ? "bg-[#0A4D91] text-white"
                       : "bg-[#f0f2f5] text-[#0A4D91] hover:bg-[#e6eaef]"
-                  }`}
+                    }`}
                 >
                   {opt}
                 </button>
@@ -180,11 +184,10 @@ function SearchSelect({
   return (
     <div className="relative" ref={ref}>
       <div
-        className={`flex items-center gap-2 border rounded-lg px-3 py-2 bg-white transition-colors ${
-          open
+        className={`flex items-center gap-2 border rounded-lg px-3 py-2 bg-white transition-colors ${open
             ? "border-gray-400 ring-1 ring-gray-400"
             : "border-gray-300 hover:border-gray-400"
-        }`}
+          }`}
       >
         <Search size={13} className="text-gray-400 shrink-0" />
         <input
@@ -309,11 +312,10 @@ function CollectionsPicker({ collections, value, onChange, openSignal }) {
     <div className="relative" ref={ref}>
       <div
         onClick={() => setOpen(true)}
-        className={`flex flex-wrap items-center gap-1.5 border rounded-lg px-2 py-2 min-h-[38px] bg-white cursor-text transition-colors ${
-          open
+        className={`flex flex-wrap items-center gap-1.5 border rounded-lg px-2 py-2 min-h-[38px] bg-white cursor-text transition-colors ${open
             ? "border-gray-400 ring-1 ring-gray-400"
             : "border-gray-300 hover:border-gray-400"
-        }`}
+          }`}
       >
         {selected.length === 0 ? (
           <span className="px-1 text-sm text-gray-400">Select collections</span>
@@ -446,15 +448,15 @@ function CategoryPicker({ value, onChange, categories }) {
   const source = Array.isArray(categories) ? categories : [];
   const searchResults = search.trim()
     ? source.flatMap((cat) => {
-        const matches = [];
-        if (cat.name.toLowerCase().includes(search.toLowerCase()))
-          matches.push(cat.name);
-        (cat.children || []).forEach((child) => {
-          if (child.toLowerCase().includes(search.toLowerCase()))
-            matches.push(`${cat.name} > ${child}`);
-        });
-        return matches;
-      })
+      const matches = [];
+      if (cat.name.toLowerCase().includes(search.toLowerCase()))
+        matches.push(cat.name);
+      (cat.children || []).forEach((child) => {
+        if (child.toLowerCase().includes(search.toLowerCase()))
+          matches.push(`${cat.name} > ${child}`);
+      });
+      return matches;
+    })
     : null;
 
   const activeCategory = parent ? source.find((c) => c.name === parent) : null;
@@ -464,11 +466,10 @@ function CategoryPicker({ value, onChange, categories }) {
       <button
         type="button"
         onClick={handleOpen}
-        className={`w-full flex items-center justify-between border rounded-lg px-3 py-2 text-sm bg-white transition-colors ${
-          open
+        className={`w-full flex items-center justify-between border rounded-lg px-3 py-2 text-sm bg-white transition-colors ${open
             ? "border-gray-400 ring-1 ring-gray-400"
             : "border-gray-300 hover:border-gray-400"
-        }`}
+          }`}
       >
         <span className={value ? "text-gray-800" : "text-gray-400"}>
           {value || "Choose a product category"}
@@ -729,11 +730,10 @@ function PackageModal({ pkg, onSave, onClose }) {
                 <button
                   key={t.value}
                   onClick={() => setL("type", t.value)}
-                  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border-2 text-sm font-medium transition-colors ${
-                    local.type === t.value
+                  className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border-2 text-sm font-medium transition-colors ${local.type === t.value
                       ? "border-gray-900 bg-gray-50 text-gray-900"
                       : "border-gray-200 text-gray-700 hover:border-gray-300"
-                  }`}
+                    }`}
                 >
                   <span>{t.icon}</span>
                   {t.label}
@@ -1295,11 +1295,10 @@ function ProductContentSection({
               setDragHandle(null);
               setDragOver(null);
             }}
-            className={`border rounded-lg p-4 transition-colors ${
-              dragOver === i && dragFrom.current !== i
+            className={`border rounded-lg p-4 transition-colors ${dragOver === i && dragFrom.current !== i
                 ? "border-gray-400 bg-gray-50"
                 : "border-gray-200"
-            }`}
+              }`}
           >
             <div className="flex items-center gap-2">
               <span
@@ -1351,11 +1350,10 @@ function ProductContentSection({
                       aria-label={label}
                       aria-pressed={active}
                       onClick={() => setCard(i, "icon", value)}
-                      className={`w-10 h-10 flex items-center justify-center rounded-lg border transition-colors ${
-                        active
+                      className={`w-10 h-10 flex items-center justify-center rounded-lg border transition-colors ${active
                           ? "border-gray-900 bg-gray-50 text-gray-900"
                           : "border-gray-200 text-gray-400 hover:border-gray-400 hover:text-gray-600"
-                      }`}
+                        }`}
                     >
                       <Icon size={16} />
                     </button>
@@ -1436,14 +1434,12 @@ function Toggle({ checked, onChange }) {
   return (
     <button
       onClick={() => onChange(!checked)}
-      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${
-        checked ? "bg-gray-900" : "bg-gray-200"
-      }`}
+      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${checked ? "bg-gray-900" : "bg-gray-200"
+        }`}
     >
       <span
-        className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${
-          checked ? "translate-x-4" : "translate-x-0.5"
-        }`}
+        className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${checked ? "translate-x-4" : "translate-x-0.5"
+          }`}
       />
     </button>
   );
@@ -1502,6 +1498,7 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
     status: "active",
     featured: false,
     variants: [],
+    metafields: {},
     trackInventory: true,
     physicalProduct: true,
   });
@@ -1515,6 +1512,11 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
   });
   const [extraProductTypes, setExtraProductTypes] = useState([]);
   const [brandOptions, setBrandOptions] = useState([]);
+  const [metafieldDefs, setMetafieldDefs] = useState([]);
+  const [metafieldDefsLoading, setMetafieldDefsLoading] = useState(true);
+  // Raw metafields as loaded from the product — used to preserve values whose
+  // definition has since been deleted
+  const [loadedMetafields, setLoadedMetafields] = useState([]);
   const [collectionsOpenSignal, setCollectionsOpenSignal] = useState(0);
   const [ready, setReady] = useState(!isEdit);
   const [pricingOpen, setPricingOpen] = useState(false);
@@ -1615,6 +1617,37 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
   }, []);
 
   useEffect(() => {
+    const loadMetafieldDefs = async () => {
+      try {
+        const res = await Api("get", "product-metafields", null, router);
+        setMetafieldDefs(res?.data?.data || res?.data || []);
+      } catch {
+        setMetafieldDefs([]);
+      } finally {
+        setMetafieldDefsLoading(false);
+      }
+    };
+    loadMetafieldDefs();
+  }, []);
+
+  const handleCreateMetafieldDefinition = async (payload) => {
+    try {
+      const res = await Api("post", "product-metafields", payload, router);
+      const created = res?.data?.data || res?.data;
+      if (!created?.key) throw new Error("Invalid response");
+      setMetafieldDefs((prev) => [...prev, created]);
+      toaster?.({ type: "success", message: "Metafield definition added" });
+      return created;
+    } catch (err) {
+      toaster?.({
+        type: "error",
+        message: err?.message || "Could not add the metafield definition",
+      });
+      return null;
+    }
+  };
+
+  useEffect(() => {
     if (!isEdit || !id) return;
     dispatch(fetchProductById(id, router)).then(() => setReady(true));
   }, [id]);
@@ -1641,7 +1674,7 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
           ? product.category
           : product.category?.name || "",
       collections: (Array.isArray(product.collections) &&
-      product.collections.length
+        product.collections.length
         ? product.collections
         : product.collection
           ? [product.collection]
@@ -1681,9 +1714,13 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
       status: product.status || "active",
       featured: product.featured || false,
       variants: product.variants || [],
+      metafields: metafieldsToValues(product.metafields),
       trackInventory: true,
       physicalProduct: true,
     });
+    setLoadedMetafields(
+      Array.isArray(product.metafields) ? product.metafields : [],
+    );
     if (product.images?.length) setExistingImages(product.images);
     setReady(true);
   }, [product]);
@@ -1765,6 +1802,12 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
       return;
     }
 
+    const metafieldError = validateMetafields(metafieldDefs, form.metafields);
+    if (metafieldError) {
+      toaster?.({ type: "error", message: metafieldError });
+      return;
+    }
+
     const totalImages = existingImages.length + newImageFiles.length;
     if (totalImages < 1) {
       toaster?.({ type: "error", message: "Please upload at least 1 product image" });
@@ -1842,6 +1885,24 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
           .map((o) => ({ label: o.label })),
       }));
     fd.append("variants", JSON.stringify(cleanVariants));
+
+    // Only send metafields once the definitions are known — otherwise a failed
+    // definitions request would wipe the values already stored on the product
+    if (!metafieldDefsLoading) {
+      const knownKeys = new Set(
+        metafieldDefs.map((d) => `${d.namespace || "custom"}.${d.key}`),
+      );
+      const orphans = loadedMetafields.filter(
+        (mf) => mf?.key && !knownKeys.has(`${mf.namespace || "custom"}.${mf.key}`),
+      );
+      fd.append(
+        "metafields",
+        JSON.stringify(
+          buildMetafieldsPayload(metafieldDefs, form.metafields, orphans),
+        ),
+      );
+    }
+
     if (isEdit) fd.append("existingImages", JSON.stringify(existingImages));
     newImageFiles.forEach((file) => fd.append("images", file));
 
@@ -1988,16 +2049,6 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
               single
             />
           </div>
-
-          {/* Ingredients + Benefits / How to use */}
-          <ProductContentSection
-            ingredientsTitle={form.ingredientsTitle}
-            ingredientCards={form.ingredientCards}
-            howToUse={form.howToUse}
-            onChangeTitle={(val) => set("ingredientsTitle", val)}
-            onChangeCards={(val) => set("ingredientCards", val)}
-            onChangeSteps={(val) => set("howToUse", val)}
-          />
 
           {/* Pricing */}
           <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
@@ -2252,8 +2303,8 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
                           ?.label ||
                         "Box"}
                       {form.package.length &&
-                      form.package.width &&
-                      form.package.height
+                        form.package.width &&
+                        form.package.height
                         ? ` · ${form.package.length} × ${form.package.width} × ${form.package.height} ${form.package.dimensionUnit}`
                         : ""}
                     </span>
@@ -2365,10 +2416,29 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
             />
           )}
 
+          {/* Ingredients + Benefits / How to use */}
+          <ProductContentSection
+            ingredientsTitle={form.ingredientsTitle}
+            ingredientCards={form.ingredientCards}
+            howToUse={form.howToUse}
+            onChangeTitle={(val) => set("ingredientsTitle", val)}
+            onChangeCards={(val) => set("ingredientCards", val)}
+            onChangeSteps={(val) => set("howToUse", val)}
+          />
+
           {/* Variants */}
           <VariantsSection
             variants={form.variants}
             onChange={(val) => set("variants", val)}
+          />
+
+          {/* Product metafields */}
+          <ProductMetafieldsSection
+            definitions={metafieldDefs}
+            values={form.metafields}
+            loading={metafieldDefsLoading}
+            onChange={(val) => set("metafields", val)}
+            onCreateDefinition={handleCreateMetafieldDefinition}
           />
 
           {/* SEO */}
