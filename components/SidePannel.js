@@ -17,6 +17,7 @@ import {
   Landmark,
   BarChart2,
   Monitor,
+  MessageCircleQuestion,
   Settings,
   ChevronDown,
   ChevronRight,
@@ -227,6 +228,15 @@ function SidePannel({ open, setOpen }) {
               icon={Users}
               title="Customers"
               active={pathname === "/customers"}
+              onClick={close}
+            />
+          )}
+          {isModuleEnabled(M.FAQ_QUESTIONS) && (
+            <NavItem
+              href="/faq-questions"
+              icon={MessageCircleQuestion}
+              title="Customer questions"
+              active={pathname === "/faq-questions"}
               onClick={close}
             />
           )}

@@ -25,6 +25,7 @@ import {
   LayoutGrid,
   ArrowLeftRight,
   Gift,
+  MessageCircleQuestion,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -47,6 +48,11 @@ const ALL_NAV_ROUTES = [
   { title: "Transfers", href: "/transfers", icon: ArrowLeftRight },
   { title: "Gift Cards", href: "/gift-cards", icon: Gift },
   { title: "Customers", href: "/customers", icon: Users },
+  {
+    title: "Customer questions",
+    href: "/faq-questions",
+    icon: MessageCircleQuestion,
+  },
   { title: "Marketing", href: "/marketing", icon: TrendingUp },
   { title: "Discounts", href: "/discounts", icon: Percent },
   { title: "Content", href: "/content", icon: FileText },

@@ -22,6 +22,7 @@ export const MODULE_IDS = {
   LEGAL_PAGES: "legal-pages",
   LEARN: "learn",
   SHOP_CONCERNS: "shop-concerns",
+  FAQ_QUESTIONS: "faq-questions",
   MARKETS: "markets",
   FINANCE: "finance",
   ANALYTICS: "analytics",
@@ -85,6 +86,7 @@ export function getModuleForPath(pathname = "") {
   if (path.startsWith("/legal-pages")) return MODULE_IDS.LEGAL_PAGES;
   if (path.startsWith("/learn")) return MODULE_IDS.LEARN;
   if (path.startsWith("/shop-concerns")) return MODULE_IDS.SHOP_CONCERNS;
+  if (path.startsWith("/faq-questions")) return MODULE_IDS.FAQ_QUESTIONS;
   if (path.startsWith("/markets")) return MODULE_IDS.MARKETS;
   if (path.startsWith("/finance")) return MODULE_IDS.FINANCE;
   if (path.startsWith("/analytics")) return MODULE_IDS.ANALYTICS;
