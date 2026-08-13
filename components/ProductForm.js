@@ -14,6 +14,15 @@ import {
   ImagePlus,
   Search,
   Check,
+  PlusCircle,
+  Beaker,
+  Droplets,
+  Sparkles,
+  Zap,
+  Leaf,
+  Shield,
+  Sun,
+  Heart,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import {
@@ -33,10 +42,44 @@ const TAXONOMY_GROUPS = {
   age: "Age",
 };
 
+// Shown in the Type picker even before the taxonomy API responds
+const DEFAULT_PRODUCT_TYPES = [
+  "Cleanser",
+  "Cleansers",
+  "cream",
+  "Custom Bundle",
+  "Exfoliants",
+  "Eye Creams",
+  "Facial Cleansers",
+  "lotion",
+  "Moisturiser",
+  "None",
+  "Procotols",
+  "Professional stamping device",
+  "Protocol",
+  "Resurfacing",
+  "Serum",
+  "Skincare mask",
+  "Whitening Body skincare",
+];
+
 function normalizeList(items) {
   return (items || [])
     .map((x) => (typeof x === "string" ? x : x?.value))
     .filter(Boolean);
+}
+
+// Case-insensitive dedupe + alphabetical sort
+function mergeOptions(...lists) {
+  const seen = new Map();
+  lists.flat().forEach((raw) => {
+    const val = String(raw || "").trim();
+    const key = val.toLowerCase();
+    if (val && !seen.has(key)) seen.set(key, val);
+  });
+  return [...seen.values()].sort((a, b) =>
+    a.localeCompare(b, undefined, { sensitivity: "base" }),
+  );
 }
 
 function MultiSelect({
@@ -83,6 +126,287 @@ function MultiSelect({
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+// ── Searchable / creatable single select ──────────────────────────────────────
+
+function SearchSelect({
+  value,
+  onChange,
+  onCreate,
+  options,
+  placeholder = "Search",
+  createLabel = "Add",
+  emptyLabel = "No matches",
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const ref = useRef(null);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) {
+        setOpen(false);
+        setSearch("");
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const query = search.trim();
+  const filtered = query
+    ? options.filter((o) => o.toLowerCase().includes(query.toLowerCase()))
+    : options;
+  const canCreate =
+    !!onCreate &&
+    !!query &&
+    !options.some((o) => o.toLowerCase() === query.toLowerCase());
+
+  const pick = (val) => {
+    onChange(val);
+    setSearch("");
+    setOpen(false);
+  };
+
+  const create = () => {
+    onCreate(query);
+    setSearch("");
+    setOpen(false);
+  };
+
+  return (
+    <div className="relative" ref={ref}>
+      <div
+        className={`flex items-center gap-2 border rounded-lg px-3 py-2 bg-white transition-colors ${
+          open
+            ? "border-gray-400 ring-1 ring-gray-400"
+            : "border-gray-300 hover:border-gray-400"
+        }`}
+      >
+        <Search size={13} className="text-gray-400 shrink-0" />
+        <input
+          value={open ? search : value}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setOpen(true);
+          }}
+          onFocus={() => setOpen(true)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              if (canCreate) create();
+              else if (filtered.length) pick(filtered[0]);
+            }
+            if (e.key === "Escape") {
+              setOpen(false);
+              setSearch("");
+            }
+          }}
+          placeholder={placeholder}
+          className="flex-1 min-w-0 text-sm text-gray-800 outline-none placeholder-gray-400 bg-transparent"
+        />
+        {(open ? search : value) && (
+          <button
+            type="button"
+            onClick={() => {
+              onChange("");
+              setSearch("");
+            }}
+            className="text-gray-400 hover:text-gray-600 shrink-0"
+          >
+            <X size={13} />
+          </button>
+        )}
+      </div>
+
+      {open && (
+        <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden">
+          <div className="max-h-56 overflow-y-auto py-1">
+            {filtered.length === 0 && !canCreate ? (
+              <p className="px-4 py-5 text-sm text-gray-400 text-center">
+                {emptyLabel}
+              </p>
+            ) : (
+              filtered.map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => pick(opt)}
+                  className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
+                >
+                  <span className={value === opt ? "font-medium" : ""}>
+                    {opt}
+                  </span>
+                  {value === opt && (
+                    <Check size={13} className="text-gray-600 shrink-0" />
+                  )}
+                </button>
+              ))
+            )}
+          </div>
+          {canCreate && (
+            <button
+              type="button"
+              onClick={create}
+              className="w-full flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 border-t border-gray-100 transition-colors text-left"
+            >
+              <Plus size={12} className="shrink-0" />
+              {createLabel} “{query}”
+            </button>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Collections multi select ──────────────────────────────────────────────────
+
+function CollectionsPicker({ collections, value, onChange, openSignal }) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState("");
+  const ref = useRef(null);
+  const selected = Array.isArray(value) ? value : [];
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) {
+        setOpen(false);
+        setSearch("");
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  useEffect(() => {
+    if (openSignal) setOpen(true);
+  }, [openSignal]);
+
+  const toggle = (id) =>
+    onChange(
+      selected.includes(id)
+        ? selected.filter((x) => x !== id)
+        : [...selected, id],
+    );
+
+  const allSelected =
+    collections.length > 0 && selected.length === collections.length;
+
+  const toggleAll = () =>
+    onChange(allSelected ? [] : collections.map((c) => c._id));
+
+  const query = search.trim().toLowerCase();
+  const filtered = query
+    ? collections.filter((c) => (c.name || "").toLowerCase().includes(query))
+    : collections;
+  const showAllRow = collections.length > 0 && (!query || "all".includes(query));
+
+  return (
+    <div className="relative" ref={ref}>
+      <div
+        onClick={() => setOpen(true)}
+        className={`flex flex-wrap items-center gap-1.5 border rounded-lg px-2 py-2 min-h-[38px] bg-white cursor-text transition-colors ${
+          open
+            ? "border-gray-400 ring-1 ring-gray-400"
+            : "border-gray-300 hover:border-gray-400"
+        }`}
+      >
+        {selected.length === 0 ? (
+          <span className="px-1 text-sm text-gray-400">Select collections</span>
+        ) : allSelected ? (
+          <span className="flex items-center gap-1 bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-md">
+            All
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                onChange([]);
+              }}
+              className="text-gray-400 hover:text-gray-700"
+            >
+              <X size={10} />
+            </button>
+          </span>
+        ) : (
+          selected.map((id) => {
+            const item = collections.find((c) => c._id === id);
+            return (
+              <span
+                key={id}
+                className="flex items-center gap-1 bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded-md"
+              >
+                {item?.name || "Collection"}
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggle(id);
+                  }}
+                  className="text-gray-400 hover:text-gray-700"
+                >
+                  <X size={10} />
+                </button>
+              </span>
+            );
+          })
+        )}
+      </div>
+
+      {open && (
+        <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden">
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-gray-100">
+            <Search size={13} className="text-gray-400 shrink-0" />
+            <input
+              autoFocus
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search collections"
+              className="flex-1 min-w-0 text-sm text-gray-700 outline-none placeholder-gray-400"
+            />
+          </div>
+          <div className="max-h-56 overflow-y-auto py-1">
+            {showAllRow && (
+              <button
+                type="button"
+                onClick={toggleAll}
+                className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left border-b border-gray-100"
+              >
+                <span className={allSelected ? "font-medium" : ""}>All</span>
+                {allSelected && (
+                  <Check size={13} className="text-gray-600 shrink-0" />
+                )}
+              </button>
+            )}
+            {filtered.length === 0 && !showAllRow ? (
+              <p className="px-4 py-5 text-sm text-gray-400 text-center">
+                No collections found
+              </p>
+            ) : (
+              filtered.map((c) => (
+                <button
+                  key={c._id}
+                  type="button"
+                  onClick={() => toggle(c._id)}
+                  className="w-full flex items-center justify-between px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors text-left"
+                >
+                  <span
+                    className={selected.includes(c._id) ? "font-medium" : ""}
+                  >
+                    {c.name}
+                  </span>
+                  {selected.includes(c._id) && (
+                    <Check size={13} className="text-gray-600 shrink-0" />
+                  )}
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -870,6 +1194,242 @@ function VariantsSection({ variants, onChange }) {
   );
 }
 
+// ── Ingredients + Benefits / How to use ───────────────────────────────────────
+
+// Values map to the icons rendered on the storefront product detail page
+const INGREDIENT_ICONS = [
+  { value: "beaker", label: "Beaker", Icon: Beaker },
+  { value: "droplet", label: "Droplet", Icon: Droplets },
+  { value: "sparkles", label: "Sparkles", Icon: Sparkles },
+  { value: "zap", label: "Zap", Icon: Zap },
+  { value: "leaf", label: "Leaf", Icon: Leaf },
+  { value: "shield", label: "Shield", Icon: Shield },
+  { value: "sun", label: "Sun", Icon: Sun },
+  { value: "heart", label: "Heart", Icon: Heart },
+];
+
+function ProductContentSection({
+  ingredientsTitle,
+  ingredientCards,
+  howToUse,
+  onChangeTitle,
+  onChangeCards,
+  onChangeSteps,
+}) {
+  // Drag to reorder benefit cards — only the grip handle starts a drag so the
+  // inputs inside the card keep normal text selection
+  const dragFrom = useRef(null);
+  const [dragHandle, setDragHandle] = useState(null);
+  const [dragOver, setDragOver] = useState(null);
+
+  const handleDrop = (dropIndex) => {
+    const from = dragFrom.current;
+    dragFrom.current = null;
+    setDragHandle(null);
+    setDragOver(null);
+    if (from == null || from === dropIndex) return;
+    const next = [...ingredientCards];
+    const [moved] = next.splice(from, 1);
+    next.splice(dropIndex, 0, moved);
+    onChangeCards(next);
+  };
+
+  const setCard = (index, key, val) => {
+    const next = [...ingredientCards];
+    next[index] = { ...next[index], [key]: val };
+    onChangeCards(next);
+  };
+
+  const setStep = (index, val) => {
+    const next = [...howToUse];
+    next[index] = val;
+    onChangeSteps(next);
+  };
+
+  return (
+    <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-6">
+      <div>
+        <h3 className="text-sm font-semibold text-gray-900">
+          Ingredients + Benefits
+        </h3>
+        <p className="text-xs text-gray-400 mt-1">
+          Shown under the “Ingredients + Benefits” tab on the product page
+        </p>
+      </div>
+
+      <div>
+        <label className="block text-xs font-medium text-gray-600 mb-1">
+          Ingredients heading
+        </label>
+        <input
+          value={ingredientsTitle}
+          onChange={(e) => onChangeTitle(e.target.value)}
+          placeholder="Ingredients: Aqua, Niacinamide etc"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 outline-none focus:ring-1 focus:ring-gray-400"
+        />
+      </div>
+
+      <div className="space-y-3">
+        <label className="block text-xs font-medium text-gray-600">
+          Benefit cards
+        </label>
+        {ingredientCards.length === 0 && (
+          <p className="text-xs text-gray-400">
+            No cards added — the product page will show its default cards.
+          </p>
+        )}
+        {ingredientCards.map((card, i) => (
+          <div
+            key={i}
+            draggable={dragHandle === i}
+            onDragStart={() => {
+              dragFrom.current = i;
+            }}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOver(i);
+            }}
+            onDrop={() => handleDrop(i)}
+            onDragEnd={() => {
+              dragFrom.current = null;
+              setDragHandle(null);
+              setDragOver(null);
+            }}
+            className={`border rounded-lg p-4 transition-colors ${
+              dragOver === i && dragFrom.current !== i
+                ? "border-gray-400 bg-gray-50"
+                : "border-gray-200"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <span
+                onMouseDown={() => setDragHandle(i)}
+                onMouseUp={() => setDragHandle(null)}
+                className="cursor-grab active:cursor-grabbing shrink-0"
+              >
+                <GripVertical size={14} className="text-gray-300" />
+              </span>
+              <input
+                value={card.title || ""}
+                onChange={(e) => setCard(i, "title", e.target.value)}
+                placeholder="Ingredient name (e.g., Niacinamide)"
+                className="flex-1 min-w-0 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 outline-none focus:ring-1 focus:ring-gray-400"
+              />
+              <button
+                type="button"
+                onClick={() =>
+                  onChangeCards(ingredientCards.filter((_, idx) => idx !== i))
+                }
+                className="text-gray-300 hover:text-red-500 transition-colors shrink-0"
+              >
+                <X size={14} />
+              </button>
+            </div>
+
+            <div className="ml-6 mt-3">
+              <textarea
+                value={card.text || ""}
+                onChange={(e) => setCard(i, "text", e.target.value)}
+                placeholder="What it does for the skin"
+                rows={3}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 outline-none focus:ring-1 focus:ring-gray-400"
+              />
+            </div>
+
+            <div className="ml-6 mt-3">
+              <label className="block text-xs font-medium text-gray-600 mb-1.5">
+                Icon
+              </label>
+              <div className="flex flex-wrap gap-2">
+                {INGREDIENT_ICONS.map(({ value, label, Icon }) => {
+                  const active = (card.icon || "beaker") === value;
+                  return (
+                    <button
+                      key={value}
+                      type="button"
+                      title={label}
+                      aria-label={label}
+                      aria-pressed={active}
+                      onClick={() => setCard(i, "icon", value)}
+                      className={`w-10 h-10 flex items-center justify-center rounded-lg border transition-colors ${
+                        active
+                          ? "border-gray-900 bg-gray-50 text-gray-900"
+                          : "border-gray-200 text-gray-400 hover:border-gray-400 hover:text-gray-600"
+                      }`}
+                    >
+                      <Icon size={16} />
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        ))}
+        <button
+          type="button"
+          onClick={() =>
+            onChangeCards([
+              ...ingredientCards,
+              { icon: "beaker", title: "", text: "" },
+            ])
+          }
+          className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          <span className="w-4 h-4 flex items-center justify-center border border-gray-400 rounded-full">
+            <Plus size={10} />
+          </span>
+          Add benefit card
+        </button>
+      </div>
+
+      <div className="border-t border-gray-100 pt-5 space-y-3">
+        <div>
+          <h3 className="text-sm font-semibold text-gray-900">How to use</h3>
+          <p className="text-xs text-gray-400 mt-1">
+            One step per line, shown as a numbered list on the product page
+          </p>
+        </div>
+        {howToUse.map((step, i) => (
+          <div key={i} className="flex items-start gap-2">
+            <span className="w-6 shrink-0 pt-2 text-xs text-gray-400 text-right">
+              {i + 1}.
+            </span>
+            <textarea
+              value={step}
+              onChange={(e) => setStep(i, e.target.value)}
+              placeholder={`Step ${i + 1}`}
+              rows={2}
+              className="flex-1 min-w-0 border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 outline-none focus:ring-1 focus:ring-gray-400 resize-none"
+            />
+            <button
+              type="button"
+              onClick={() => onChangeSteps(howToUse.filter((_, idx) => idx !== i))}
+              className="text-gray-300 hover:text-red-500 transition-colors shrink-0 pt-2"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        ))}
+        {howToUse.length === 0 && (
+          <p className="text-xs text-gray-400">
+            No steps added — the product page will show its default steps.
+          </p>
+        )}
+        <button
+          type="button"
+          onClick={() => onChangeSteps([...howToUse, ""])}
+          className="flex items-center gap-1.5 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+        >
+          <span className="w-4 h-4 flex items-center justify-center border border-gray-400 rounded-full">
+            <Plus size={10} />
+          </span>
+          Add step
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ── Toggle ────────────────────────────────────────────────────────────────────
 
 function Toggle({ checked, onChange }) {
@@ -911,6 +1471,9 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
   const [form, setForm] = useState({
     name: "",
     description: "",
+    ingredientsTitle: "",
+    ingredientCards: [],
+    howToUse: [],
     price: "",
     compareAtPrice: "",
     chargeTax: true,
@@ -922,7 +1485,7 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
     continueSellingWhenOutOfStock: false,
     stock: 0,
     category: "",
-    collection: "",
+    collections: [],
     brand: "",
     productType: "",
     skinType: "",
@@ -950,6 +1513,9 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
     skin_concern: [],
     age: [],
   });
+  const [extraProductTypes, setExtraProductTypes] = useState([]);
+  const [brandOptions, setBrandOptions] = useState([]);
+  const [collectionsOpenSignal, setCollectionsOpenSignal] = useState(0);
   const [ready, setReady] = useState(!isEdit);
   const [pricingOpen, setPricingOpen] = useState(false);
   const [inventoryOpen, setInventoryOpen] = useState(false);
@@ -964,8 +1530,57 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
       dimensions: { ...prev.dimensions, [key]: val },
     }));
 
+  const productTypeOptions = useMemo(() => {
+    const merged = mergeOptions(
+      DEFAULT_PRODUCT_TYPES,
+      taxonomy.product_type,
+      extraProductTypes,
+      form.productType ? [form.productType] : [],
+    );
+    // "None" is pinned above the alphabetical list
+    const none = merged.filter((o) => o.toLowerCase() === "none");
+    return [...none, ...merged.filter((o) => o.toLowerCase() !== "none")];
+  }, [taxonomy.product_type, extraProductTypes, form.productType]);
+
+  const vendorOptions = useMemo(
+    () => mergeOptions(brandOptions, form.brand ? [form.brand] : []),
+    [brandOptions, form.brand],
+  );
+
+  // New product types are kept in the taxonomy so they show up next time
+  const handleCreateProductType = async (value) => {
+    const val = String(value || "").trim();
+    if (!val) return;
+    set("productType", val);
+    setExtraProductTypes((prev) => [...prev, val]);
+    try {
+      await Api(
+        "post",
+        "product-taxonomy",
+        { group: "product_type", value: val },
+        router,
+      );
+    } catch {
+      /* already exists or not permitted — keep it on this product anyway */
+    }
+  };
+
   useEffect(() => {
     dispatch(fetchCollections(router));
+  }, []);
+
+  // Vendor suggestions from brands already used by other products
+  useEffect(() => {
+    const loadBrands = async () => {
+      try {
+        const res = await Api("get", "products?limit=100", null, router);
+        const list = res?.data?.data || res?.data || [];
+        setBrandOptions(normalizeList(list.map((p) => p?.brand)));
+      } catch {
+        setBrandOptions([]);
+      }
+    };
+    loadBrands();
   }, []);
 
   useEffect(() => {
@@ -1009,6 +1624,13 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
     setForm({
       name: product.name || "",
       description: product.description || "",
+      ingredientsTitle: product.ingredientsTitle || "",
+      ingredientCards: (product.ingredientCards || []).map((c) => ({
+        icon: c?.icon || "beaker",
+        title: c?.title || "",
+        text: c?.text || "",
+      })),
+      howToUse: Array.isArray(product.howToUse) ? product.howToUse : [],
       price: product.price ?? "",
       discountType: product.discountType || "flat",
       discountValue: product.discountValue ?? "",
@@ -1018,7 +1640,15 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
         typeof product.category === "string"
           ? product.category
           : product.category?.name || "",
-      collection: product.collection?._id || product.collection || "",
+      collections: (Array.isArray(product.collections) &&
+      product.collections.length
+        ? product.collections
+        : product.collection
+          ? [product.collection]
+          : []
+      )
+        .map((c) => c?._id || c)
+        .filter(Boolean),
       brand: product.brand || "",
       productType: product.productType || "",
       skinType: product.skinType || "",
@@ -1144,6 +1774,25 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
     const fd = new FormData();
     fd.append("name", form.name);
     fd.append("description", form.description);
+    fd.append("ingredientsTitle", form.ingredientsTitle);
+    fd.append(
+      "ingredientCards",
+      JSON.stringify(
+        form.ingredientCards
+          .filter((c) => (c.title || "").trim() || (c.text || "").trim())
+          .map((c) => ({
+            icon: c.icon || "beaker",
+            title: (c.title || "").trim(),
+            text: (c.text || "").trim(),
+          })),
+      ),
+    );
+    fd.append(
+      "howToUse",
+      JSON.stringify(
+        form.howToUse.map((s) => (s || "").trim()).filter(Boolean),
+      ),
+    );
     fd.append("price", form.price);
     if (form.compareAtPrice !== "")
       fd.append("compareAtPrice", form.compareAtPrice);
@@ -1159,7 +1808,9 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
       form.continueSellingWhenOutOfStock,
     );
     fd.append("stock", form.stock);
-    if (form.collection) fd.append("collection", form.collection);
+    fd.append("collections", JSON.stringify(form.collections));
+    // Keep the legacy single-collection field in sync with the first selection
+    fd.append("collection", form.collections[0] || "");
     fd.append("brand", form.brand);
     fd.append("productType", form.productType);
     fd.append("skinType", form.skinType);
@@ -1293,24 +1944,6 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div>
                 <label className="block text-xs font-medium text-gray-600 mb-1">
-                  Product type
-                </label>
-                <select
-                  value={form.productType}
-                  onChange={(e) => set("productType", e.target.value)}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 outline-none focus:ring-1 focus:ring-gray-400 bg-white"
-                >
-                  <option value="">Select</option>
-                  {taxonomy.product_type.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-gray-600 mb-1">
                   Skin Type
                 </label>
                 <select
@@ -1355,6 +1988,16 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
               single
             />
           </div>
+
+          {/* Ingredients + Benefits / How to use */}
+          <ProductContentSection
+            ingredientsTitle={form.ingredientsTitle}
+            ingredientCards={form.ingredientCards}
+            howToUse={form.howToUse}
+            onChangeTitle={(val) => set("ingredientsTitle", val)}
+            onChangeCards={(val) => set("ingredientCards", val)}
+            onChangeSteps={(val) => set("howToUse", val)}
+          />
 
           {/* Pricing */}
           <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
@@ -1765,31 +2408,50 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
             </h3>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
-                Vendor / Brand
+                Type
               </label>
-              <input
-                value={form.brand}
-                onChange={(e) => set("brand", e.target.value)}
-                placeholder="Brand name"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 outline-none focus:ring-1 focus:ring-gray-400"
+              <SearchSelect
+                value={form.productType}
+                onChange={(val) => set("productType", val)}
+                onCreate={handleCreateProductType}
+                options={productTypeOptions}
+                placeholder="Search or add product type"
+                emptyLabel="No product types found"
               />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
-                Collections
+                Vendor / Brand
               </label>
-              <select
-                value={form.collection}
-                onChange={(e) => set("collection", e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-700 outline-none bg-white"
-              >
-                <option value="">None</option>
-                {collections.map((c) => (
-                  <option key={c._id} value={c._id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+              <SearchSelect
+                value={form.brand}
+                onChange={(val) => set("brand", val)}
+                onCreate={(val) => set("brand", val)}
+                options={vendorOptions}
+                placeholder="Search or add vendor"
+                emptyLabel="No vendors found"
+              />
+            </div>
+            <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-medium text-gray-600">
+                  Collections
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setCollectionsOpenSignal((v) => v + 1)}
+                  title="Add collection"
+                  className="text-gray-400 hover:text-gray-700 transition-colors"
+                >
+                  <PlusCircle size={15} />
+                </button>
+              </div>
+              <CollectionsPicker
+                collections={collections}
+                value={form.collections}
+                onChange={(val) => set("collections", val)}
+                openSignal={collectionsOpenSignal}
+              />
             </div>
             <div>
               <label className="block text-xs font-medium text-gray-600 mb-1">
