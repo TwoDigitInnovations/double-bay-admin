@@ -17,6 +17,7 @@ import {
   Landmark,
   BarChart2,
   Monitor,
+  MessageCircleQuestion,
   Settings,
   ChevronDown,
   ChevronRight,
@@ -64,11 +65,10 @@ function NavItem({ href, icon: Icon, title, active, onClick }) {
     <Link
       href={href}
       onClick={onClick}
-      className={`flex items-center gap-2.5 px-2.5 py-1 rounded-lg text-[13px] transition-colors ${
-        active
-          ? "bg-white shadow-sm font-medium text-gray-900"
-          : "text-gray-600 hover:bg-black/8"
-      }`}
+      className={`flex items-center gap-2.5 px-2.5 py-1 rounded-lg text-[13px] transition-colors ${active
+        ? "bg-white shadow-sm font-medium text-gray-900"
+        : "text-gray-600 hover:bg-black/8"
+        }`}
     >
       <Icon size={16} className={active ? "text-gray-800" : "text-gray-500"} />
       {title}
@@ -166,13 +166,12 @@ function SidePannel({ open, setOpen }) {
                 <Link
                   href="/products"
                   onClick={close}
-                  className={`w-full flex items-center gap-2.5 px-2.5 py-1.75 rounded-lg text-[13px] transition-colors ${
-                    pathname === "/products"
-                      ? "bg-white shadow-sm font-medium text-gray-900"
-                      : inProductsSection
-                        ? "font-medium text-gray-900 hover:bg-black/8"
-                        : "text-gray-600 hover:bg-black/8"
-                  }`}
+                  className={`w-full flex items-center gap-2.5 px-2.5 py-1.75 rounded-lg text-[13px] transition-colors ${pathname === "/products"
+                    ? "bg-white shadow-sm font-medium text-gray-900"
+                    : inProductsSection
+                      ? "font-medium text-gray-900 hover:bg-black/8"
+                      : "text-gray-600 hover:bg-black/8"
+                    }`}
                 >
                   <Tag
                     size={16}
@@ -191,11 +190,10 @@ function SidePannel({ open, setOpen }) {
                       key={item.href}
                       href={item.href}
                       onClick={close}
-                      className={`flex items-center pl-7.5 pr-2.5 py-1 rounded-lg text-[13px] transition-colors ${
-                        pathname === item.href
-                          ? "bg-white shadow-sm font-medium text-gray-900"
-                          : "text-gray-600 hover:bg-black/8"
-                      }`}
+                      className={`flex items-center pl-7.5 pr-2.5 py-1 rounded-lg text-[13px] transition-colors ${pathname === item.href
+                        ? "bg-white shadow-sm font-medium text-gray-900"
+                        : "text-gray-600 hover:bg-black/8"
+                        }`}
                     >
                       {pathname === item.href && (
                         <ChevronRight
@@ -211,12 +209,34 @@ function SidePannel({ open, setOpen }) {
             </div>
           )}
 
+          {isModuleEnabled(M.SHOP_CONCERNS) && (
+            <NavItem
+              href="/shop-concerns"
+              icon={Layers}
+              title="Shop concerns"
+              active={
+                pathname === "/shop-concerns" ||
+                pathname.startsWith("/shop-concerns/")
+              }
+              onClick={close}
+            />
+          )}
+
           {isModuleEnabled(M.CUSTOMERS) && (
             <NavItem
               href="/customers"
               icon={Users}
               title="Customers"
               active={pathname === "/customers"}
+              onClick={close}
+            />
+          )}
+          {isModuleEnabled(M.FAQ_QUESTIONS) && (
+            <NavItem
+              href="/faq-questions"
+              icon={MessageCircleQuestion}
+              title="Customer questions"
+              active={pathname === "/faq-questions"}
               onClick={close}
             />
           )}
@@ -262,18 +282,6 @@ function SidePannel({ open, setOpen }) {
               icon={BookOpen}
               title="Learn"
               active={pathname === "/learn" || pathname.startsWith("/learn/")}
-              onClick={close}
-            />
-          )}
-          {isModuleEnabled(M.SHOP_CONCERNS) && (
-            <NavItem
-              href="/shop-concerns"
-              icon={Layers}
-              title="Shop concerns"
-              active={
-                pathname === "/shop-concerns" ||
-                pathname.startsWith("/shop-concerns/")
-              }
               onClick={close}
             />
           )}

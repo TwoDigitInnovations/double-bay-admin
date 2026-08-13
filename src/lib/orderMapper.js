@@ -14,6 +14,7 @@ const PAYMENT_LABELS = {
   card: "Card",
   netbanking: "Net banking",
   wallet: "Wallet",
+  stripe: "Stripe",
 };
 
 export function formatOrderStatus(status) {
@@ -60,6 +61,7 @@ export function mapApiOrderToRow(order) {
     customer: {
       name: customerName,
       email: order.user?.email || "",
+      phone: order.user?.phone || order.address?.phone || "",
     },
     paymentStatus: order.paymentStatus || "pending",
     orderStatus: order.orderStatus || "placed",
@@ -70,7 +72,24 @@ export function mapApiOrderToRow(order) {
     total: order.totalAmount ?? 0,
     deliveryMethod: formatPaymentMethod(order.paymentMethod),
     paymentMethod: order.paymentMethod,
+    paymentMethodLabel: formatPaymentMethod(order.paymentMethod),
+    paymentId: order.paymentId || "",
     address: order.address,
+
+    // Detail-view fields
+    updatedAt: order.updatedAt,
+    subtotal: order.subtotal ?? 0,
+    tax: order.tax ?? 0,
+    deliveryCharge: order.deliveryCharge ?? 0,
+    couponCode: order.couponCode || "",
+    couponDiscount: order.couponDiscount ?? 0,
+    statusHistory: order.statusHistory || [],
+    tracking: order.tracking || null,
+    notes: order.notes || "",
+    returnRequest: order.returnRequest || null,
+    deliveredAt: order.deliveredAt,
+    cancelledAt: order.cancelledAt,
+
     raw: order,
   };
 }

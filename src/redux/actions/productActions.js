@@ -27,6 +27,24 @@ export const fetchProducts = (router) => async (dispatch) => {
   }
 };
 
+// Lookup for pickers (e.g. the collection product picker). Deliberately not a
+// thunk — it must not overwrite the products list the products page is showing.
+export const searchProducts = async (params = {}, router) => {
+  try {
+    const qs = new URLSearchParams(
+      Object.entries({ limit: 20, ...params }).reduce((acc, [k, v]) => {
+        if (v !== undefined && v !== null && v !== "") acc[k] = v;
+        return acc;
+      }, {}),
+    ).toString();
+    const res = await Api("get", `products?${qs}`, "", router);
+    if (!res?.status) return [];
+    return res.data?.data || res.data || [];
+  } catch {
+    return [];
+  }
+};
+
 export const fetchProductById = (id, router) => async (dispatch) => {
   try {
     dispatch(setLoading(true));

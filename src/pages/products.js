@@ -94,16 +94,19 @@ const COLUMNS = (onDelete) => [
   },
   {
     Header: "Product type",
-    accessor: "type",
+    accessor: "productType",
     Cell: ({ value }) => (
-      <span className="text-sm text-gray-700">{value || ""}</span>
+      <span className="text-sm text-gray-700">{value || "—"}</span>
     ),
   },
   {
     Header: "Vendor",
-    accessor: "vendor",
+    id: "vendor",
+    // The form's "Vendor / Brand" field saves to `brand`; `vendor` is the
+    // populated owner account, used as a fallback.
+    accessor: (row) => row.brand || row.vendor?.fullname || "",
     Cell: ({ value }) => (
-      <span className="text-sm text-gray-700">{value || ""}</span>
+      <span className="text-sm text-gray-700">{value || "—"}</span>
     ),
   },
   {

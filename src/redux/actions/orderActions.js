@@ -86,6 +86,19 @@ export const updateOrderById = (id, data, router) => async (dispatch) => {
   }
 };
 
+export const updateOrderNotes = (id, notes, router) => async (dispatch) => {
+  try {
+    const res = await Api("put", `orders/${id}/notes`, { notes }, router);
+    if (res?.status) {
+      const raw = res.data?.data || res.data;
+      dispatch(updateOrder(mapApiOrderToRow(raw) || raw));
+    }
+    return res;
+  } catch (err) {
+    throw err;
+  }
+};
+
 export const deleteOrderById = (id, router) => async (dispatch) => {
   try {
     const res = await Api("delete", `orders/${id}`, "", router);
