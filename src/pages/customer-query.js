@@ -1,6 +1,14 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
-import { MessageCircleQuestion, Trash2, X, Mail } from "lucide-react";
+import {
+  MessageCircleQuestion,
+  Trash2,
+  X,
+  Mail,
+  Send,
+  AlertCircle,
+  CheckCircle2,
+} from "lucide-react";
 import isAuth from "@/components/isAuth";
 import Table from "@/components/table";
 import { Api, timeSince } from "@/services/service";
@@ -34,18 +42,32 @@ function StatusPill({ value }) {
 
 // ── Detail modal ──────────────────────────────────────────────────────────────
 
-function QuestionModal({ question, onClose, onSave, onDelete, saving }) {
-  const [answer, setAnswer] = useState(question.answer || "");
+function formatDateTime(value) {
+  if (!value) return "—";
+  return new Date(value).toLocaleString("en-AU", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  });
+}
 
-  const formattedDate = question.createdAt
-    ? new Date(question.createdAt).toLocaleString("en-AU", {
-      day: "numeric",
-      month: "short",
-      year: "numeric",
-      hour: "numeric",
-      minute: "2-digit",
-    })
-    : "—";
+function QuestionModal({
+  question,
+  onClose,
+  onSave,
+  onSend,
+  onDelete,
+  saving,
+  sending,
+}) {
+  const [answer, setAnswer] = useState("");
+
+  const responses = question.responses || [];
+  const busy = saving || sending;
+
+  const formattedDate = formatDateTime(question.createdAt);
 
   return (
     <div
@@ -97,23 +119,86 @@ function QuestionModal({ question, onClose, onSave, onDelete, saving }) {
             </p>
           </div>
 
+          {responses.length > 0 && (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
+                Responses sent ({responses.length})
+              </p>
+              <div className="space-y-2">
+                {responses.map((item, index) => {
+                  const failed = item.emailStatus === "failed";
+                  return (
+                    <div
+                      key={item._id || index}
+                      className={`rounded-lg border px-4 py-3 ${failed
+                        ? "border-red-100 bg-red-50"
+                        : "border-gray-100 bg-white"
+                        }`}
+                    >
+                      <p className="text-sm leading-relaxed text-gray-800 whitespace-pre-wrap">
+                        {item.message}
+                      </p>
+                      <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-gray-400">
+                        {failed ? (
+                          <span className="inline-flex items-center gap-1 text-red-600">
+                            <AlertCircle size={12} />
+                            Email failed
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-green-600">
+                            <CheckCircle2 size={12} />
+                            Emailed
+                          </span>
+                        )}
+                        <span>·</span>
+                        <span>{formatDateTime(item.sentAt)}</span>
+                        {/* {item.sentBy?.fullname && (
+                          <>
+                            <span>·</span>
+                            <span>by {item.sentBy.fullname}</span>
+                          </>
+                        )} */}
+                      </div>
+                      {failed && item.emailError && (
+                        <p className="mt-1 text-xs text-red-500">{item.emailError}</p>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {responses.length === 0 && question.answer && (
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
+                Previous response
+              </p>
+              <p className="rounded-lg border border-gray-100 px-4 py-3 text-sm leading-relaxed text-gray-800 whitespace-pre-wrap">
+                {question.answer}
+              </p>
+              {question.answeredBy?.fullname && question.answeredAt && (
+                <p className="mt-1.5 text-xs text-gray-400">
+                  By {question.answeredBy.fullname} · {timeSince(question.answeredAt)}
+                </p>
+              )}
+            </div>
+          )}
+
           <div>
             <label className="block text-xs font-semibold uppercase tracking-wider text-gray-400 mb-2">
-              Response
+              {responses.length > 0 ? "Send another response" : "Response"}
             </label>
             <textarea
               rows={4}
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
-              placeholder="Enter a message"
+              placeholder="Write your reply to the customer…"
               className="w-full resize-none rounded-lg border border-gray-200 px-4 py-3 text-sm text-gray-800 outline-none focus:border-gray-400"
             />
-            {question.answeredBy?.fullname && question.answeredAt && (
-              <p className="mt-1.5 text-xs text-gray-400">
-                Last answered by {question.answeredBy.fullname} ·{" "}
-                {timeSince(question.answeredAt)}
-              </p>
-            )}
+            <p className="mt-1.5 text-xs text-gray-400">
+              This message is emailed to {question.email} and saved here.
+            </p>
           </div>
         </div>
 
@@ -130,7 +215,7 @@ function QuestionModal({ question, onClose, onSave, onDelete, saving }) {
           <div className="flex flex-wrap items-center gap-2">
             {question.status !== "archived" && (
               <button
-                disabled={saving}
+                disabled={busy}
                 onClick={() => onSave(question._id, { status: "archived" })}
                 className="rounded-lg border border-gray-200 px-4 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
               >
@@ -138,13 +223,15 @@ function QuestionModal({ question, onClose, onSave, onDelete, saving }) {
               </button>
             )}
             <button
-              disabled={saving}
-              onClick={() =>
-                onSave(question._id, { answer, status: "answered" })
-              }
-              className="rounded-lg bg-gray-900 px-4 py-1.5 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
+              disabled={busy || !answer.trim()}
+              onClick={async () => {
+                const sent = await onSend(question._id, answer.trim());
+                if (sent) setAnswer("");
+              }}
+              className="flex items-center gap-1.5 rounded-lg bg-gray-900 px-4 py-1.5 text-sm font-medium text-white hover:bg-gray-800 disabled:opacity-50"
             >
-              {saving ? "Saving…" : "Send"}
+              <Send size={14} />
+              {sending ? "Sending…" : "Send response"}
             </button>
           </div>
         </div>
@@ -167,6 +254,7 @@ function FaqQuestions({ toaster }) {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [sending, setSending] = useState(false);
 
   useEffect(() => {
     const id = setTimeout(() => {
@@ -231,6 +319,45 @@ function FaqQuestions({ toaster }) {
       toaster?.({ type: "error", message: err?.message || "Could not update question" });
     } finally {
       setSaving(false);
+    }
+  };
+
+  // Emails the reply to the customer and stores it on the question.
+  const handleSend = async (id, message) => {
+    if (!message) {
+      toaster?.({ type: "error", message: "Please enter a response message" });
+      return false;
+    }
+
+    setSending(true);
+    try {
+      const res = await Api("post", `faq-questions/${id}/respond`, { message }, router);
+      if (!res?.status) return false;
+
+      toaster?.({
+        type: "success",
+        message: res.data?.message || "Response sent to the customer",
+      });
+      if (res.data?.data) setSelected(res.data.data);
+      loadItems();
+      return true;
+    } catch (err) {
+      toaster?.({
+        type: "error",
+        message: err?.message || "Could not send the response",
+      });
+      // The reply is still recorded server-side when only the email fails,
+      // so pull the question back in to show the failed attempt.
+      try {
+        const fresh = await Api("get", `faq-questions/${id}`, "", router);
+        if (fresh?.status && fresh.data?.data) setSelected(fresh.data.data);
+      } catch {
+        // Nothing more to do — the toast already reported the failure.
+      }
+      loadItems();
+      return false;
+    } finally {
+      setSending(false);
     }
   };
 
@@ -312,7 +439,7 @@ function FaqQuestions({ toaster }) {
         <div>
           <h1 className="flex items-center gap-2 text-lg font-semibold text-gray-900">
             <MessageCircleQuestion size={18} className="text-gray-700" />
-            Customer questions
+            Customer Query
           </h1>
           <p className="text-xs text-gray-400 mt-0.5 ml-7">
             Questions submitted from the storefront FAQ section
@@ -382,10 +509,13 @@ function FaqQuestions({ toaster }) {
 
       {selected && (
         <QuestionModal
+          key={selected._id}
           question={selected}
           saving={saving}
+          sending={sending}
           onClose={() => setSelected(null)}
           onSave={handleSave}
+          onSend={handleSend}
           onDelete={handleDelete}
         />
       )}

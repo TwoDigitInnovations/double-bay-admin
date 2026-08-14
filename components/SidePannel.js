@@ -233,9 +233,9 @@ function SidePannel({ open, setOpen }) {
           )}
           {isModuleEnabled(M.FAQ_QUESTIONS) && (
             <NavItem
-              href="/faq-questions"
+              href="/customer-query"
               icon={MessageCircleQuestion}
-              title="Customer questions"
+              title="Customer Query"
               active={pathname === "/faq-questions"}
               onClick={close}
             />
