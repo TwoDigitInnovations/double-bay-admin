@@ -13,7 +13,7 @@ export const fetchDashboardOverview = (router) => async (dispatch) => {
   try {
     const res = await Api('get', 'dashboard/overview', '', router);
     if (res?.status) {
-      dispatch(setOverview(res.data));
+      dispatch(setOverview(res.data?.data || res.data));
       dispatch(setError(null));
     } else {
       dispatch(setError(res?.message || 'Failed to fetch overview'));
@@ -25,12 +25,15 @@ export const fetchDashboardOverview = (router) => async (dispatch) => {
   }
 };
 
-export const fetchSalesChart = (router, period = 'monthly', days = 30) => async (dispatch) => {
+export const fetchSalesChart = (router, period = 'monthly', year) => async (dispatch) => {
   dispatch(setLoading(true));
   try {
-    const res = await Api('get', `dashboard/sales-chart?period=${period}&days=${days}`, '', router);
+    // `year` only narrows a monthly chart; a yearly one spans every year.
+    const qs = new URLSearchParams({ period });
+    if (period === 'monthly' && year) qs.set('year', String(year));
+    const res = await Api('get', `dashboard/sales-chart?${qs.toString()}`, '', router);
     if (res?.status) {
-      dispatch(setSalesChart(res.data || []));
+      dispatch(setSalesChart(res.data?.data || res.data || []));
       dispatch(setError(null));
     } else {
       dispatch(setError(res?.message || 'Failed to fetch sales chart'));
@@ -47,7 +50,7 @@ export const fetchTopProducts = (router, limit = 10) => async (dispatch) => {
   try {
     const res = await Api('get', `dashboard/top-products?limit=${limit}`, '', router);
     if (res?.status) {
-      dispatch(setTopProducts(res.data || []));
+      dispatch(setTopProducts(res.data?.data || res.data || []));
       dispatch(setError(null));
     } else {
       dispatch(setError(res?.message || 'Failed to fetch top products'));
@@ -64,7 +67,7 @@ export const fetchLowStock = (router, threshold = 10, limit = 5) => async (dispa
   try {
     const res = await Api('get', `inventory/low-stock?threshold=${threshold}&limit=${limit}&page=1`, '', router);
     if (res?.status) {
-      dispatch(setLowStock(res.data || []));
+      dispatch(setLowStock(res.data?.data || res.data || []));
       dispatch(setError(null));
     } else {
       dispatch(setError(res?.message || 'Failed to fetch low stock'));
