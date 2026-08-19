@@ -129,7 +129,7 @@ function SidePannel({ open, setOpen }) {
               DB
             </div>
             <span className="text-[13px] font-medium text-gray-800 truncate flex-1">
-              DoubleBay
+              Double Bay
             </span>
             {/* <ChevronDown size={14} className="text-gray-500 shrink-0" /> */}
           </div>

@@ -38,10 +38,9 @@ export default function Login(props) {
   };
 
   const inputCls = (hasError) =>
-    `flex items-center gap-3 rounded-xl px-4 py-3 border transition-all ${
-      hasError
-        ? "border-red-300 bg-red-50"
-        : "border-gray-200 bg-gray-50 focus-within:border-[#008060] focus-within:bg-white"
+    `flex items-center gap-3 rounded-xl px-4 py-3 border transition-all ${hasError
+      ? "border-red-300 bg-red-50"
+      : "border-gray-200 bg-gray-50 focus-within:border-[#008060] focus-within:bg-white"
     }`;
 
   return (
@@ -52,14 +51,14 @@ export default function Login(props) {
         <div className="w-full max-w-sm">
 
           {/* Brand */}
-        
+
 
           {/* Card */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-              <div className="flex items-center justify-center mb-0 bg-white  rounded-2xl ">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/logo-doublebay.png" alt="Logo" className="h-24 object-contain" />
-          </div>
+            <div className="flex items-center justify-center mb-0 bg-white  rounded-2xl ">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-doublebay.png" alt="Logo" className="h-24 object-contain" />
+            </div>
             <h1 className="text-xl font-bold text-gray-900 mb-1">Welcome back</h1>
             <p className="text-sm text-gray-500 mb-7">Sign in to your admin account</p>
 
@@ -127,7 +126,7 @@ export default function Login(props) {
             {/* Submit */}
             <button
               onClick={submit}
-              className="w-full py-3 rounded-xl bg-[#008060] hover:bg-[#006b50] text-white text-sm font-semibold transition-colors"
+              className="w-full py-3 rounded-lg bg-[#008060] hover:bg-[#006b50] text-white text-sm font-semibold transition-colors"
             >
               Sign in
             </button>

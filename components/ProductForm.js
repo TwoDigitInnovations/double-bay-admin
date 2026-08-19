@@ -97,7 +97,8 @@ function MultiSelect({
 }) {
   const selected = Array.isArray(value) ? value : [];
   const toggle = (opt) => {
-    if (selected.includes(opt)) onChange([]);
+    if (selected.includes(opt))
+      onChange(single ? [] : selected.filter((v) => v !== opt));
     else onChange(single ? [opt] : [...selected, opt]);
   };
 
@@ -2046,7 +2047,6 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
               value={form.skinConcerns}
               onChange={(val) => set("skinConcerns", val)}
               placeholder="Add options in Product Categories"
-              single
             />
           </div>
 
