@@ -89,10 +89,9 @@ function Profile(props) {
   };
 
   const inputCls = (hasError) =>
-    `flex items-center gap-3 rounded-xl px-4 py-3 border transition-all ${
-      hasError
-        ? "border-red-300 bg-red-50"
-        : editMode
+    `flex items-center gap-3 rounded-xl px-4 py-3 border transition-all ${hasError
+      ? "border-red-300 bg-red-50"
+      : editMode
         ? "border-gray-200 bg-white focus-within:border-[#008060]"
         : "border-transparent bg-gray-50"
     }`;
@@ -104,7 +103,7 @@ function Profile(props) {
   return (
     <div className="p-4 md:p-6">
       <div className="max-w-2xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+        <div className="bg-white rounded-xl shadow-sm overflow-hidden">
 
           {/* Green banner */}
           <div className="h-24 w-full bg-[#008060]" />
@@ -167,7 +166,7 @@ function Profile(props) {
                   Full Name
                 </label>
                 <div className={inputCls(submitted && errors.fullname)}>
-                  <MdPerson className="text-[#008060] text-lg flex-shrink-0" />
+                  <MdPerson className="text-[#008060] text-lg shrink-0" />
                   <input
                     type="text"
                     placeholder="Enter your full name"
@@ -187,7 +186,7 @@ function Profile(props) {
                   Email Address
                 </label>
                 <div className={inputCls(submitted && errors.email)}>
-                  <MdEmail className="text-[#008060] text-lg flex-shrink-0" />
+                  <MdEmail className="text-[#008060] text-lg shrink-0" />
                   <input
                     type="email"
                     placeholder="name@email.com"
@@ -207,7 +206,7 @@ function Profile(props) {
                   Phone Number
                 </label>
                 <div className={inputCls(submitted && errors.phone)}>
-                  <MdPhone className="text-[#008060] text-lg flex-shrink-0" />
+                  <MdPhone className="text-[#008060] text-lg shrink-0" />
                   <input
                     type="tel"
                     placeholder="+1 234 567 8900"

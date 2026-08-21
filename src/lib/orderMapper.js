@@ -17,6 +17,19 @@ const PAYMENT_LABELS = {
   stripe: "Stripe",
 };
 
+/** Order amounts render in the currency the order was placed in. */
+export function formatMoney(value, currency = "USD") {
+  const amount = Number(value) || 0;
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency,
+    }).format(amount);
+  } catch {
+    return `${currency} ${amount.toFixed(2)}`;
+  }
+}
+
 export function formatOrderStatus(status) {
   return ORDER_STATUS_LABELS[status] || status || "—";
 }
@@ -75,6 +88,10 @@ export function mapApiOrderToRow(order) {
     paymentMethodLabel: formatPaymentMethod(order.paymentMethod),
     paymentId: order.paymentId || "",
     address: order.address,
+    tags: order.tags || [],
+    currency: order.currency?.code || "USD",
+    discountTotal:
+      (order.couponDiscount || 0) + (order.manualDiscount?.amount || 0),
 
     // Detail-view fields
     updatedAt: order.updatedAt,
