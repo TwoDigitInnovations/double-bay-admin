@@ -139,3 +139,55 @@ export const updateOrderPayment = (id, data, router) => async (dispatch) => {
     throw err;
   }
 };
+
+/** Admin: full order edit — line items, discounts, shipping, tax, tags. */
+export const updateOrderDetails = (id, data, router) => async (dispatch) => {
+  try {
+    const res = await Api("put", `orders/${id}`, data, router);
+    if (res?.status) {
+      const raw = res.data?.data || res.data;
+      dispatch(updateOrder(mapApiOrderToRow(raw) || raw));
+    }
+    return res;
+  } catch (err) {
+    return { status: false, message: err?.message || "Failed to update order" };
+  }
+};
+
+export const duplicateOrderById = (id, router) => async (dispatch) => {
+  try {
+    const res = await Api("post", `orders/${id}/duplicate`, {}, router);
+    if (res?.status) {
+      const raw = res.data?.data || res.data;
+      dispatch(addOrder(mapApiOrderToRow(raw) || raw));
+      return { status: true, order: raw };
+    }
+    return res;
+  } catch (err) {
+    return { status: false, message: err?.message || "Failed to duplicate order" };
+  }
+};
+
+export const addOrderComment = (id, message, router) => async () => {
+  try {
+    return await Api("post", `orders/${id}/comments`, { message }, router);
+  } catch (err) {
+    return { status: false, message: err?.message || "Failed to add comment" };
+  }
+};
+
+export const deleteOrderComment = (id, entryId, router) => async () => {
+  try {
+    return await Api("delete", `orders/${id}/comments/${entryId}`, "", router);
+  } catch (err) {
+    return { status: false, message: err?.message || "Failed to delete comment" };
+  }
+};
+
+export const sendOrderInvoice = (id, data, router) => async () => {
+  try {
+    return await Api("post", `orders/${id}/invoice`, data, router);
+  } catch (err) {
+    return { status: false, message: err?.message || "Failed to send invoice" };
+  }
+};
