@@ -1180,41 +1180,93 @@ export function SendInvoiceModal({
 }
 
 /**
- * Blocking prompt shown while the order draft holds unsaved edits. It has no
- * dismiss affordance on purpose — Save and Discard are the only ways out.
+ * Save bar that sits at the foot of the page while the order draft holds
+ * unsaved edits. It scrolls with the page rather than floating over it, so it
+ * never covers the timeline, and it is non-blocking: the page stays
+ * interactive so several changes can be batched and then applied — or
+ * dropped — in one go.
  */
-export function UnsavedChangesDialog({ saving, blocked, onDiscard, onSave }) {
+export function UnsavedChangesBar({ saving, blocked, onDiscard, onSave }) {
+  return (
+    <div className="mt-5">
+      <div className="w-full bg-white rounded-xl border border-gray-200 shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+          <p className="flex items-center gap-2 text-sm font-medium text-gray-900">
+            <CircleAlert size={16} className="text-amber-500 shrink-0" />
+            Unsaved changes
+          </p>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={onDiscard}
+              disabled={saving}
+              className="text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 disabled:opacity-40 px-4 py-2 rounded-lg transition-colors cursor-pointer"
+            >
+              Discard
+            </button>
+            <button
+              type="button"
+              onClick={onSave}
+              disabled={saving || blocked}
+              className="bg-gray-900 hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors cursor-pointer"
+            >
+              {saving ? "Saving…" : "Save"}
+            </button>
+          </div>
+        </div>
+        {blocked && (
+          <p className="mx-4 mb-3 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800">
+            An order needs at least one product before it can be saved. Discard
+            to bring the removed products back.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Asked only when the user tries to leave the page while the draft still holds
+ * edits — the point at which the changes would otherwise be lost silently.
+ */
+export function UnsavedChangesDialog({
+  saving,
+  blocked,
+  onStay,
+  onDiscard,
+  onSave,
+}) {
   return (
     <div className="fixed inset-0 z-100 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
-      <div className="relative bg-white rounded-2xl shadow-xl w-full max-w-md">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={onStay} />
+      <div className="relative bg-white rounded-xl shadow-xl w-full max-w-md">
         <div className="px-5 py-4 border-b border-gray-100">
           <h2 className="flex items-center gap-2 text-base font-semibold text-gray-900">
             <CircleAlert size={16} className="text-amber-500 shrink-0" />
-            Unsaved changes
+            Leave with unsaved changes?
           </h2>
         </div>
         <div className="px-5 py-4">
           <p className="text-sm text-gray-600 leading-relaxed">
             This order has edits that haven&apos;t been saved yet. Save them to
-            apply the changes, or discard them to go back to the last saved
-            version of the order.
+            apply the changes before leaving, or leave to go back to the last
+            saved version of the order.
           </p>
           {blocked && (
             <p className="mt-3 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800">
-              An order needs at least one product before it can be saved.
-              Discard to bring the removed products back.
+              An order needs at least one product before it can be saved. Leave
+              without saving to bring the removed products back.
             </p>
           )}
         </div>
-        <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-gray-100">
+        <div className="flex flex-wrap items-center justify-end gap-2 px-5 py-4 border-t border-gray-100">
           <button
             type="button"
             onClick={onDiscard}
             disabled={saving}
             className="text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 disabled:opacity-40 px-4 py-2 rounded-lg transition-colors cursor-pointer"
           >
-            Discard
+            Leave without saving
           </button>
           <button
             type="button"
@@ -1222,9 +1274,18 @@ export function UnsavedChangesDialog({ saving, blocked, onDiscard, onSave }) {
             disabled={saving || blocked}
             className="bg-gray-900 hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors cursor-pointer"
           >
-            {saving ? "Saving…" : "Save"}
+            {saving ? "Saving…" : "Save and leave"}
           </button>
         </div>
+
+        <button
+          type="button"
+          onClick={onStay}
+          disabled={saving}
+          className="absolute right-2 top-1 text-sm font-medium text-gray-600 hover:text-gray-900 disabled:opacity-40 px-3 py-2 rounded-lg transition-colors cursor-pointer"
+        >
+          <X className="w-4" />
+        </button>
       </div>
     </div>
   );
