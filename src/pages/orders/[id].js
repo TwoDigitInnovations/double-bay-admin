@@ -43,6 +43,7 @@ import {
   SendInvoiceModal,
   ShippingModal,
   TaxModal,
+  UnsavedChangesBar,
   UnsavedChangesDialog,
   inputClass,
 } from "@/components/orderDetail";
@@ -614,6 +615,8 @@ function OrderDetail({ toaster }) {
   const [posting, setPosting] = useState(false);
   const [sending, setSending] = useState(false);
   const [confirm, setConfirm] = useState(null);
+  // Navigation held back by the unsaved-changes guard, if any.
+  const [pendingNav, setPendingNav] = useState(null);
   // Edits in flight survive the re-fetch that follows a note or comment.
   const keepDraftRef = useRef(null);
   const [unlocked, setUnlocked] = useState(() => new Set());
@@ -649,6 +652,11 @@ function OrderDetail({ toaster }) {
   const currency = draft?.currency?.code || "USD";
   const money = (value) => formatMoney(value, currency);
   const isDirty = !!draft && serializeDraft(draft) !== baseline;
+  // Router events fire outside React's update cycle, so the guard below reads
+  // these instead of the closed-over state.
+  const isDirtyRef = useRef(false);
+  isDirtyRef.current = isDirty;
+  const allowNavRef = useRef(false);
 
   const patch = (changes) => setDraft((prev) => ({ ...prev, ...changes }));
 
@@ -728,16 +736,16 @@ function OrderDetail({ toaster }) {
   };
 
   const handleSave = async () => {
-    if (!isDirty || saving) return;
+    if (!isDirty || saving) return false;
     setSaving(true);
     try {
       const res = await dispatch(updateOrderDetails(id, toPayload(draft), router));
-      if (notify(res, "Failed to update order", "Order updated")) {
-        // Re-fetch so populated customer and product data isn't lost. The
-        // server's copy wins here, so the local draft is deliberately dropped.
-        keepDraftRef.current = null;
-        await dispatch(fetchOrderById(id, router));
-      }
+      if (!notify(res, "Failed to update order", "Order updated")) return false;
+      // Re-fetch so populated customer and product data isn't lost. The
+      // server's copy wins here, so the local draft is deliberately dropped.
+      keepDraftRef.current = null;
+      await dispatch(fetchOrderById(id, router));
+      return true;
     } finally {
       setSaving(false);
     }
@@ -748,6 +756,85 @@ function OrderDetail({ toaster }) {
     setDraft(next);
     setBaseline(serializeDraft(next));
     setUnlocked(new Set());
+  };
+
+  // ── Leaving with unsaved edits ────────────────────────────────────────────
+  // The save bar is non-blocking so several edits can be batched, which means
+  // the only place a draft can be lost is on the way out. Route changes are
+  // held until the user decides; a full unload falls back to the browser's own
+  // prompt, the most a page is allowed to do there.
+  useEffect(() => {
+    const onBeforeUnload = (e) => {
+      if (!isDirtyRef.current) return;
+      e.preventDefault();
+      e.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, []);
+
+  useEffect(() => {
+    const onRouteChangeStart = (url) => {
+      if (!isDirtyRef.current || allowNavRef.current) return;
+      setPendingNav(url);
+      // Next.js gives no way to cancel a route change, so throwing is the
+      // documented escape hatch. It happens before the router touches history,
+      // so the address bar stays put. The matching error event goes out first,
+      // shaped like the router's own cancellation, so any route-progress
+      // listener doesn't sit waiting on a navigation that never lands.
+      router.events.emit(
+        "routeChangeError",
+        Object.assign(new Error("Route Cancelled"), { cancelled: true }),
+        url,
+        { shallow: false },
+      );
+      // A string rather than an Error on purpose: Next.js skips its dev error
+      // overlay for non-Error throws.
+      // eslint-disable-next-line no-throw-literal
+      throw "Route change aborted: the order has unsaved changes.";
+    };
+    // Back/forward has already moved the address bar by the time we hear about
+    // it, so put the URL back and re-issue the navigation once the user picks.
+    const onPopState = ({ as }) => {
+      if (!isDirtyRef.current || allowNavRef.current) return true;
+      setPendingNav(as);
+      window.history.pushState(null, "", router.asPath);
+      return false;
+    };
+    // A held navigation clears the pass once it lands, so the guard is armed
+    // again for prev/next hops that keep this page mounted.
+    const onRouteSettled = () => {
+      allowNavRef.current = false;
+    };
+
+    router.events.on("routeChangeStart", onRouteChangeStart);
+    router.events.on("routeChangeComplete", onRouteSettled);
+    router.beforePopState(onPopState);
+    return () => {
+      router.events.off("routeChangeStart", onRouteChangeStart);
+      router.events.off("routeChangeComplete", onRouteSettled);
+      router.beforePopState(() => true);
+    };
+  }, [router]);
+
+  /** Let the held navigation through, past the guard. */
+  const resumeNav = (url) => {
+    allowNavRef.current = true;
+    setPendingNav(null);
+    router.push(url);
+  };
+
+  const handleLeaveWithoutSaving = () => {
+    handleDiscard();
+    resumeNav(pendingNav);
+  };
+
+  const handleSaveAndLeave = async () => {
+    const url = pendingNav;
+    if (await handleSave()) resumeNav(url);
+    // The save failed and has already been reported — hold the user here so
+    // they can act on it rather than losing the draft to the navigation.
+    else setPendingNav(null);
   };
 
   const handleSaveNotes = async (notes) => {
@@ -1669,6 +1756,17 @@ function OrderDetail({ toaster }) {
         </div>
       </div>
 
+      {/* Closes the page while edits are pending. The page stays fully usable
+          so several changes can be saved or discarded together. */}
+      {isDirty && (
+        <UnsavedChangesBar
+          saving={saving}
+          blocked={items.length === 0}
+          onDiscard={handleDiscard}
+          onSave={handleSave}
+        />
+      )}
+
       {/* ── Dialogs ─────────────────────────────────────────────────────── */}
       {modal === "product" && (
         <AddProductModal
@@ -1777,14 +1875,14 @@ function OrderDetail({ toaster }) {
         />
       )}
 
-      {/* Blocks the page whenever the draft holds edits. Never stacked on
-          top of another dialog, which would trap the one underneath. */}
-      {isDirty && !modal && !confirm && (
+      {/* Only asked on the way out, where the draft would otherwise be lost. */}
+      {pendingNav && (
         <UnsavedChangesDialog
           saving={saving}
           blocked={items.length === 0}
-          onDiscard={handleDiscard}
-          onSave={handleSave}
+          onStay={() => setPendingNav(null)}
+          onDiscard={handleLeaveWithoutSaving}
+          onSave={handleSaveAndLeave}
         />
       )}
 
