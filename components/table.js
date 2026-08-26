@@ -156,6 +156,7 @@ function Table({
   disableClientPagination,
 }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [sortMenuOpen, setSortMenuOpen] = useState(false);
   const [hideArchived, setHideArchived] = useState(false);
   const [dragOver, setDragOver] = useState(null);
   const dragFrom = useRef(null);
@@ -164,8 +165,10 @@ function Table({
   // Close settings on outside click
   useEffect(() => {
     const handler = (e) => {
-      if (settingsRef.current && !settingsRef.current.contains(e.target))
+      if (settingsRef.current && !settingsRef.current.contains(e.target)) {
         setSettingsOpen(false);
+        setSortMenuOpen(false);
+      }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -189,8 +192,9 @@ function Table({
     canNextPage,
     nextPage,
     previousPage,
-    state: { pageIndex, pageSize, globalFilter },
+    state: { pageIndex, pageSize, globalFilter, sortBy },
     setGlobalFilter,
+    setSortBy,
     allColumns,
     setColumnOrder,
     selectedFlatRows,
@@ -234,6 +238,29 @@ function Table({
 
   // Drag to reorder columns in settings panel
   const draggableColumns = allColumns.filter((c) => c.id !== "_select");
+
+  // Sortable columns for the "Sort by" menu
+  const sortableColumns = allColumns.filter(
+    (c) => c.id !== "_select" && c.canSort,
+  );
+  const activeSort = sortBy?.[0];
+  const activeSortColumn = activeSort
+    ? allColumns.find((c) => c.id === activeSort.id)
+    : null;
+  const activeSortLabel = activeSortColumn
+    ? typeof activeSortColumn.Header === "string"
+      ? activeSortColumn.Header
+      : activeSortColumn.id
+    : "None";
+
+  const applySort = (id) => {
+    if (activeSort?.id === id) {
+      // Toggle direction on the current column
+      setSortBy([{ id, desc: !activeSort.desc }]);
+    } else {
+      setSortBy([{ id, desc: false }]);
+    }
+  };
 
   const handleDragStart = (index) => {
     dragFrom.current = index;
@@ -306,14 +333,65 @@ function Table({
           {settingsOpen && (
             <div className="absolute right-0 top-full mt-1.5 bg-white rounded-xl shadow-xl border border-gray-100 w-60 z-50 py-2">
               {/* Sort by */}
-              <div className="px-4 py-2 flex items-center justify-between">
-                <div className="flex items-center gap-2 text-sm text-gray-700">
-                  <ArrowUpDown size={13} className="text-gray-400" />
-                  Sort by
-                </div>
-                <span className="text-xs text-gray-400 flex items-center gap-1">
-                  Created <ChevronDown size={12} />
-                </span>
+              <div className="px-2">
+                <button
+                  onClick={() => setSortMenuOpen((v) => !v)}
+                  className="w-full px-2 py-2 flex items-center justify-between rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className="flex items-center gap-2 text-sm text-gray-700">
+                    <ArrowUpDown size={13} className="text-gray-400" />
+                    Sort by
+                  </div>
+                  <span className="text-xs text-gray-400 flex items-center gap-1">
+                    {activeSortLabel}
+                    {activeSort ? (
+                      activeSort.desc ? (
+                        <ChevronDown size={12} />
+                      ) : (
+                        <ChevronUp size={12} />
+                      )
+                    ) : (
+                      <ChevronDown size={12} />
+                    )}
+                  </span>
+                </button>
+
+                {sortMenuOpen && (
+                  <div className="mt-0.5 pb-1">
+                    {sortableColumns.map((col) => {
+                      const isActive = activeSort?.id === col.id;
+                      const label =
+                        typeof col.Header === "string" ? col.Header : col.id;
+                      return (
+                        <button
+                          key={col.id}
+                          onClick={() => applySort(col.id)}
+                          className={`w-full pl-9 pr-3 py-1.5 flex items-center justify-between text-sm rounded-lg transition-colors ${
+                            isActive
+                              ? "text-[#008060] bg-green-50"
+                              : "text-gray-600 hover:bg-gray-50"
+                          }`}
+                        >
+                          <span>{label}</span>
+                          {isActive &&
+                            (activeSort.desc ? (
+                              <ChevronDown size={12} />
+                            ) : (
+                              <ChevronUp size={12} />
+                            ))}
+                        </button>
+                      );
+                    })}
+                    {activeSort && (
+                      <button
+                        onClick={() => setSortBy([])}
+                        className="w-full pl-9 pr-3 py-1.5 text-left text-xs text-gray-400 hover:text-gray-600 transition-colors"
+                      >
+                        Clear sort
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
 
               {/* Hide archived */}

@@ -1484,7 +1484,7 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
     category: "",
     collections: [],
     brand: "",
-    productType: "",
+    productType: "None",
     skinType: "",
     skinConcerns: [],
     age: "",
@@ -1684,7 +1684,7 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
         .map((c) => c?._id || c)
         .filter(Boolean),
       brand: product.brand || "",
-      productType: product.productType || "",
+      productType: product.productType || "None",
       skinType: product.skinType || "",
       skinConcerns: product.skinConcerns || [],
       age: product.age || "",
@@ -2058,7 +2058,7 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
               </label>
               <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden max-w-xs">
                 <span className="px-3 py-2 text-sm text-gray-500 bg-gray-50 border-r border-gray-300">
-                  ₹
+                  $
                 </span>
                 <input
                   type="number"
@@ -2094,7 +2094,7 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
                       </label>
                       <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
                         <span className="px-3 py-2 text-sm text-gray-500 bg-gray-50 border-r border-gray-300">
-                          ₹
+                          $
                         </span>
                         <input
                           type="number"
@@ -2119,7 +2119,7 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
                           onChange={(e) => set("discountType", e.target.value)}
                           className="border border-gray-300 rounded-lg px-2 py-2 text-sm text-gray-700 outline-none bg-white"
                         >
-                          <option value="flat">₹</option>
+                          <option value="flat">$</option>
                           <option value="percentage">%</option>
                         </select>
                         <input
@@ -2155,7 +2155,7 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
               </label>
               <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden max-w-xs">
                 <span className="px-3 py-2 text-sm text-gray-500 bg-gray-50 border-r border-gray-300">
-                  ₹
+                  $
                 </span>
                 <input
                   type="number"

@@ -1,10 +1,13 @@
 import { useEffect, useMemo } from "react";
 import { useRouter } from "next/router";
 import { useDispatch, useSelector } from "react-redux";
-import { Layers, Plus } from "lucide-react";
+import { Layers, Plus, Trash2 } from "lucide-react";
 import isAuth from "@/components/isAuth";
 import Table, { StatusPill } from "@/components/table";
-import { fetchCollections } from "@/redux/actions/collectionActions";
+import {
+  fetchCollections,
+  deleteCollectionById,
+} from "@/redux/actions/collectionActions";
 
 function CollectionTitleCell({ value, row }) {
   const { image, type, channels } = row.original;
@@ -33,7 +36,7 @@ function CollectionTitleCell({ value, row }) {
   );
 }
 
-const COLUMNS = [
+const buildColumns = (onDelete) => [
   {
     Header: "Title",
     accessor: "name",
@@ -61,6 +64,24 @@ const COLUMNS = [
     Header: "Status",
     accessor: "status",
     Cell: ({ value }) => <StatusPill value={value} />,
+  },
+  {
+    Header: "Action",
+    id: "_actions",
+    disableSortBy: true,
+    Cell: ({ row }) => (
+      <button
+        type="button"
+        onClick={(e) => {
+          e.stopPropagation();
+          onDelete(row.original);
+        }}
+        className="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+        title="Delete collection"
+      >
+        <Trash2 size={16} />
+      </button>
+    ),
   },
 ];
 
@@ -96,7 +117,17 @@ function Collections() {
     dispatch(fetchCollections(router));
   }, [dispatch]);
 
-  const columns = useMemo(() => COLUMNS, []);
+  const handleDelete = (collection) => {
+    if (
+      !window.confirm(
+        `Delete collection "${collection.name}"? This can't be undone.`,
+      )
+    )
+      return;
+    dispatch(deleteCollectionById(collection._id, router));
+  };
+
+  const columns = useMemo(() => buildColumns(handleDelete), []);
 
   return (
     <div className="p-4 sm:p-6">
