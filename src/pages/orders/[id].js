@@ -993,12 +993,14 @@ function OrderDetail({ toaster }) {
   }
 
   const user = raw.user || {};
+  // A guest checkout has no User, so its contact details live on the order.
+  const guest = raw.guest || {};
   const address = draft.address || {};
   const billing = draft.billingAddress || {};
   const customerName =
-    user.fullname || order.customer?.name || address.fullname || "Guest";
-  const customerEmail = user.email || order.customer?.email;
-  const customerPhone = user.phone || address.phone;
+    user.fullname || guest.fullname || order.customer?.name || address.fullname || "Guest";
+  const customerEmail = user.email || guest.email || order.customer?.email;
+  const customerPhone = user.phone || guest.phone || address.phone;
   const customerOrders = raw.customerStats?.orders || 0;
   const adminInitial = (admin?.fullname || admin?.email || "A").charAt(0);
   const updatedBy = raw.updatedBy?.fullname || raw.updatedBy?.email;

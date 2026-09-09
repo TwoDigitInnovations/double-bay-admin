@@ -57,8 +57,10 @@ export function mapFulfillmentStatus(orderStatus) {
 export function mapApiOrderToRow(order) {
   if (!order) return null;
 
+  // Guest orders carry their contact details on the order itself, not a User.
   const customerName =
     order.user?.fullname ||
+    order.guest?.fullname ||
     order.address?.fullname ||
     (typeof order.user === "string" ? null : null) ||
     "Guest";
@@ -73,7 +75,7 @@ export function mapApiOrderToRow(order) {
     createdAt: order.createdAt,
     customer: {
       name: customerName,
-      email: order.user?.email || "",
+      email: order.user?.email || order.guest?.email || "",
       phone: order.user?.phone || order.address?.phone || "",
     },
     paymentStatus: order.paymentStatus || "pending",
