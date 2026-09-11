@@ -156,7 +156,7 @@ const COLUMNS = (onDelete) => [
     accessor: (row) =>
       row.discountType === "percentage"
         ? `${row.discountValue}%`
-        : `₹${row.discountValue}`,
+        : `$${row.discountValue}`,
     Cell: ({ value }) => <span className="text-sm font-medium text-gray-900">{value}</span>,
   },
   {
