@@ -44,23 +44,30 @@ function randomCode() {
   return Math.random().toString(36).substring(2, 10).toUpperCase();
 }
 
-function todayStr() {
-  return new Date().toISOString().split("T")[0];
+const pad = (n) => String(n).padStart(2, "0");
+
+// "YYYY-MM-DD" / "HH:MM" in local time, as <input type="date|time"> expects.
+function toDateInput(d) {
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-function toISO(dateStr, timeStr) {
+function toTimeInput(d) {
+  return `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function todayStr() {
+  return toDateInput(new Date());
+}
+
+// Combine date + time inputs (local time) into an ISO string.
+// fallbackTime is used when no time was picked — "23:59" makes an expiry
+// date last the whole day.
+function toISO(dateStr, timeStr, fallbackTime = "00:00") {
   if (!dateStr) return null;
-  try {
-    const [time, meridiem] = timeStr?.split(" ") || ["12:00", "AM"];
-    let [h, m] = (time || "12:00").split(":").map(Number);
-    if (meridiem === "PM" && h !== 12) h += 12;
-    if (meridiem === "AM" && h === 12) h = 0;
-    const d = new Date(dateStr);
-    d.setHours(h, m, 0, 0);
-    return d.toISOString();
-  } catch {
-    return new Date(dateStr).toISOString();
-  }
+  const [y, mo, d] = dateStr.split("-").map(Number);
+  const [h, m] = (timeStr || fallbackTime).split(":").map(Number);
+  const date = new Date(y, mo - 1, d, h || 0, m || 0, 0, 0);
+  return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
 // ── Shared UI atoms ────────────────────────────────────────────────────────────
@@ -175,11 +182,10 @@ function MethodSection({ type, form, set }) {
           <button
             key={m}
             onClick={() => set("method", m)}
-            className={`px-4 py-1.5 text-sm font-medium transition-colors ${
-              form.method === m
-                ? "bg-gray-200 text-gray-900"
-                : "bg-white text-gray-600 hover:bg-gray-50"
-            }`}
+            className={`px-4 py-1.5 text-sm font-medium transition-colors ${form.method === m
+              ? "bg-gray-200 text-gray-900"
+              : "bg-white text-gray-600 hover:bg-gray-50"
+              }`}
           >
             {m === "discount_code" ? "Discount code" : "Automatic discount"}
           </button>
@@ -248,13 +254,13 @@ function DiscountValueSection({ form, set }) {
             placeholder="0"
           />
           <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">
-            {isPercent ? "%" : "₹"}
+            {isPercent ? "%" : "$"}
           </span>
         </div>
       </div>
       {isPercent && (
         <>
-          <Label>Maximum discount amount (₹)</Label>
+          <Label>Maximum discount amount ($)</Label>
           <Input
             type="number"
             min="0"
@@ -327,7 +333,7 @@ function BuyXGetYSection({ form, set, onBrowse }) {
         <div className="grid grid-cols-3 gap-3 mb-3">
           <div>
             <Label>
-              {form.buyType === "min_qty" ? "Quantity" : "Amount (₹)"}
+              {form.buyType === "min_qty" ? "Quantity" : "Amount ($)"}
             </Label>
             <Input
               type="number"
@@ -462,7 +468,7 @@ function BuyXGetYSection({ form, set, onBrowse }) {
                 placeholder="0"
               />
               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">
-                ₹
+                $
               </span>
             </div>
           )}
@@ -531,7 +537,7 @@ function MinPurchaseSection({ form, set }) {
           checked={form.minPurchaseType === "amount"}
           onChange={() => set("minPurchaseType", "amount")}
         >
-          Minimum purchase amount (₹)
+          Minimum purchase amount ($)
         </Radio>
         {form.minPurchaseType === "amount" && (
           <div className="ml-6 relative w-48">
@@ -544,7 +550,7 @@ function MinPurchaseSection({ form, set }) {
               placeholder="0.00"
             />
             <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-400">
-              ₹
+              $
             </span>
           </div>
         )}
@@ -660,7 +666,7 @@ function CombinationsSection({ form, set }) {
 function ActiveDatesSection({ form, set }) {
   return (
     <Card>
-      <SectionTitle>Active dates</SectionTitle>
+      <SectionTitle>Active dates &amp; expiry</SectionTitle>
       <div className="grid grid-cols-2 gap-3 mb-3">
         <div>
           <Label>Start date</Label>
@@ -697,12 +703,17 @@ function ActiveDatesSection({ form, set }) {
         checked={form.hasEndDate}
         onChange={(e) => set("hasEndDate", e.target.checked)}
       >
-        Set end date
+        Set expiry date
       </Checkbox>
+      {!form.hasEndDate && (
+        <p className="text-xs text-gray-400 mt-1.5 ml-6">
+          This discount never expires.
+        </p>
+      )}
       {form.hasEndDate && (
         <div className="grid grid-cols-2 gap-3 mt-3">
           <div>
-            <Label>End date</Label>
+            <Label>Expiry date</Label>
             <div className="relative">
               <Calendar
                 size={14}
@@ -710,6 +721,7 @@ function ActiveDatesSection({ form, set }) {
               />
               <Input
                 type="date"
+                min={form.startDate || undefined}
                 value={form.endDate}
                 onChange={(e) => set("endDate", e.target.value)}
                 className="pl-8"
@@ -717,7 +729,7 @@ function ActiveDatesSection({ form, set }) {
             </div>
           </div>
           <div>
-            <Label>End time (IST)</Label>
+            <Label>Expiry time (IST)</Label>
             <div className="relative">
               <Clock
                 size={14}
@@ -731,6 +743,10 @@ function ActiveDatesSection({ form, set }) {
               />
             </div>
           </div>
+          <p className="col-span-2 text-xs text-gray-400">
+            Leave the time empty to keep the discount valid until the end of
+            the expiry date.
+          </p>
         </div>
       )}
     </Card>
@@ -752,7 +768,7 @@ function SummaryPanel({ type, form }) {
     form.eligibility === "all" ? "All customers" : "Specific customers",
     "For Online Store",
     form.minPurchaseType === "amount"
-      ? `Minimum purchase of ₹${form.minOrderAmount || "0"}`
+      ? `Minimum purchase of $${form.minOrderAmount || "0"}`
       : form.minPurchaseType === "qty"
         ? `Minimum quantity of ${form.minQty || "0"}`
         : "No minimum purchase requirement",
@@ -763,6 +779,9 @@ function SummaryPanel({ type, form }) {
       ? "Can combine with other discounts"
       : "Can't combine with other discounts",
     form.startDate ? `Active from ${form.startDate}` : "Active from today",
+    form.hasEndDate && form.endDate
+      ? `Expires ${form.endDate}${form.endTime ? ` at ${form.endTime}` : ""}`
+      : "No expiry date",
   ];
 
   return (
@@ -796,7 +815,7 @@ function SummaryPanel({ type, form }) {
       {/* Sales channel */}
       <Card>
         <SectionTitle>Sales channel access</SectionTitle>
-        <Checkbox checked={form.salesChannel} onChange={() => {}}>
+        <Checkbox checked={form.salesChannel} onChange={() => { }}>
           Allow discount to be featured on selected channels
         </Checkbox>
       </Card>
@@ -891,7 +910,7 @@ const defaultForm = () => ({
   combineOrder: false,
   combineShipping: false,
   startDate: todayStr(),
-  startTime: new Date().toTimeString().slice(0, 5),
+  startTime: toTimeInput(new Date()),
   hasEndDate: false,
   endDate: "",
   endTime: "",
@@ -966,7 +985,7 @@ export default function DiscountForm({
           code: c.code || "",
           discountValue: String(c.discountValue ?? ""),
           discountValueType:
-            c.discountType === "percentage" ? "percentage" : "fixed",
+            c.discountType === "percentage" ? "percentage" : "flat",
           minOrderAmount: String(c.minOrderAmount ?? ""),
           minPurchaseType: c.minOrderAmount > 0 ? "amount" : "none",
           limitTotal: (c.usageLimit ?? 0) > 0,
@@ -976,11 +995,14 @@ export default function DiscountForm({
             ? String(c.maxDiscountAmount)
             : "",
           startDate: c.startDate
-            ? new Date(c.startDate).toISOString().split("T")[0]
+            ? toDateInput(new Date(c.startDate))
             : todayStr(),
-          hasEndDate: !noExpiry,
-          endDate:
-            !noExpiry && expiry ? expiry.toISOString().split("T")[0] : "",
+          startTime: c.startDate
+            ? toTimeInput(new Date(c.startDate))
+            : prev.startTime,
+          hasEndDate: !!expiry && !noExpiry,
+          endDate: expiry && !noExpiry ? toDateInput(expiry) : "",
+          endTime: expiry && !noExpiry ? toTimeInput(expiry) : "",
         }));
       })
       .finally(() => {
@@ -1022,7 +1044,7 @@ export default function DiscountForm({
       perUserLimit: form.limitPerCustomer ? 1 : 99,
       startDate: toISO(form.startDate, form.startTime),
       expiryDate: form.hasEndDate
-        ? toISO(form.endDate, form.endTime)
+        ? toISO(form.endDate, form.endTime, "23:59")
         : new Date("2099-12-31").toISOString(),
       status: "active",
     };
@@ -1045,9 +1067,20 @@ export default function DiscountForm({
     if (form.hasEndDate && !form.endDate) {
       toaster?.({
         type: "error",
-        message: "End date is required when set end date is checked",
+        message: "Expiry date is required when set expiry date is checked",
       });
       return;
+    }
+    if (form.hasEndDate) {
+      const start = toISO(form.startDate, form.startTime);
+      const end = toISO(form.endDate, form.endTime, "23:59");
+      if (start && end && new Date(end) <= new Date(start)) {
+        toaster?.({
+          type: "error",
+          message: "Expiry must be after the start date and time",
+        });
+        return;
+      }
     }
 
     setSaving(true);
@@ -1105,7 +1138,7 @@ export default function DiscountForm({
       </div>
 
       {/* Two-column layout */}
-      <div className="flex flex-col lg:flex-row gap-5 items-start">
+      <div className="flex flex-col lg:flex-row gap-5 items-start mb-20">
         {/* Left column */}
         <div className="flex-1 w-full flex flex-col gap-4 min-w-0">
           <MethodSection type={type} form={form} set={set} />
@@ -1160,7 +1193,7 @@ export default function DiscountForm({
       </div>
 
       {/* Sticky footer save */}
-      <div className="fixed bottom-0 right-0 left-0 lg:left-64 bg-white border-t border-gray-200 px-6 py-3 flex justify-end gap-3 z-40">
+      <div className="fixed bottom-0 right-0 left-0 lg:left-56 bg-white border-t border-gray-200 px-6 py-3 flex justify-end gap-3 z-40">
         <button
           onClick={() => router.push("/discounts")}
           className="border border-gray-300 bg-white hover:bg-gray-50 text-gray-700 text-sm font-medium px-4 py-2 rounded-lg transition-colors"
