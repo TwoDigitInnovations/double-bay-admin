@@ -12,6 +12,7 @@ import {
   Plus,
   GripVertical,
   ImagePlus,
+  Video,
   Search,
   Check,
   PlusCircle,
@@ -973,6 +974,100 @@ function MediaUpload({
   );
 }
 
+// ── Video upload (single, max 10 MB) ─────────────────────────────────────────
+
+const VIDEO_MAX_BYTES = 10 * 1024 * 1024;
+const VIDEO_ACCEPT = "video/mp4,video/webm,video/quicktime";
+
+function VideoUpload({ existingVideo, newFile, onSelect, onRemove, onError }) {
+  const inputRef = useRef(null);
+  const previewUrl = useMemo(
+    () => (newFile ? URL.createObjectURL(newFile) : ""),
+    [newFile],
+  );
+  useEffect(() => {
+    return () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
+
+  const src = previewUrl || existingVideo;
+
+  const pick = (file) => {
+    if (!file) return;
+    if (!VIDEO_ACCEPT.split(",").includes(file.type)) {
+      onError?.("Video must be MP4, WebM or MOV");
+      return;
+    }
+    if (file.size > VIDEO_MAX_BYTES) {
+      onError?.("Video must be 10 MB or smaller");
+      return;
+    }
+    onSelect(file);
+  };
+
+  return (
+    <div>
+      {src ? (
+        <div className="relative group w-full sm:w-72">
+          <video
+            src={src}
+            controls
+            className="w-full aspect-video rounded-lg border border-gray-200 bg-black"
+          />
+          <button
+            type="button"
+            onClick={onRemove}
+            className="absolute top-1 right-1 bg-white rounded-full p-0.5 shadow border border-gray-200"
+          >
+            <X size={11} className="text-gray-600" />
+          </button>
+          {newFile && (
+            <p className="text-xs text-gray-500 mt-1 truncate">
+              {newFile.name} · {(newFile.size / (1024 * 1024)).toFixed(1)} MB
+            </p>
+          )}
+        </div>
+      ) : (
+        <div
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={(e) => {
+            e.preventDefault();
+            pick(e.dataTransfer.files?.[0]);
+          }}
+          onClick={() => inputRef.current?.click()}
+          className="border-2 border-dashed border-gray-300 rounded-xl hover:border-gray-400 cursor-pointer transition-colors py-6 px-4 flex flex-col items-center text-center"
+        >
+          <Video size={22} className="text-gray-400 mb-2" />
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              inputRef.current?.click();
+            }}
+            className="text-sm font-medium text-gray-700 border border-gray-300 bg-white hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors"
+          >
+            Upload video
+          </button>
+          <p className="text-xs text-gray-400 mt-2">
+            MP4, WebM or MOV, 1 video, max 10 MB
+          </p>
+        </div>
+      )}
+      <input
+        ref={inputRef}
+        type="file"
+        accept={VIDEO_ACCEPT}
+        className="hidden"
+        onChange={(e) => {
+          pick(e.target.files?.[0]);
+          e.target.value = "";
+        }}
+      />
+    </div>
+  );
+}
+
 // ── Tags input ────────────────────────────────────────────────────────────────
 
 function TagsInput({ tags, onChange }) {
@@ -1505,6 +1600,8 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
   });
   const [existingImages, setExistingImages] = useState([]);
   const [newImageFiles, setNewImageFiles] = useState([]);
+  const [existingVideo, setExistingVideo] = useState("");
+  const [newVideoFile, setNewVideoFile] = useState(null);
   const [taxonomy, setTaxonomy] = useState({
     product_type: [],
     skin_type: [],
@@ -1520,7 +1617,7 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
   const [loadedMetafields, setLoadedMetafields] = useState([]);
   const [collectionsOpenSignal, setCollectionsOpenSignal] = useState(0);
   const [ready, setReady] = useState(!isEdit);
-  const [pricingOpen, setPricingOpen] = useState(false);
+  const [pricingOpen, setPricingOpen] = useState(true);
   const [inventoryOpen, setInventoryOpen] = useState(false);
   const [shippingOpen, setShippingOpen] = useState(false);
   const [customsOpen, setCustomsOpen] = useState(false);
@@ -1723,6 +1820,7 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
       Array.isArray(product.metafields) ? product.metafields : [],
     );
     if (product.images?.length) setExistingImages(product.images);
+    setExistingVideo(product.video || "");
     setReady(true);
   }, [product]);
 
@@ -1906,6 +2004,8 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
 
     if (isEdit) fd.append("existingImages", JSON.stringify(existingImages));
     newImageFiles.forEach((file) => fd.append("images", file));
+    if (newVideoFile) fd.append("video", newVideoFile);
+    else if (isEdit) fd.append("existingVideo", existingVideo);
 
     try {
       loader?.(true);
@@ -1995,6 +2095,21 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
                 setNewImageFiles((p) => p.filter((_, idx) => idx !== i))
               }
             />
+            <div className="mt-4">
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Video
+              </label>
+              <VideoUpload
+                existingVideo={existingVideo}
+                newFile={newVideoFile}
+                onSelect={setNewVideoFile}
+                onRemove={() => {
+                  setNewVideoFile(null);
+                  setExistingVideo("");
+                }}
+                onError={(message) => toaster?.({ type: "error", message })}
+              />
+            </div>
           </div>
 
           {/* Product meta */}
