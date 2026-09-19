@@ -191,3 +191,19 @@ export const sendOrderInvoice = (id, data, router) => async () => {
     return { status: false, message: err?.message || "Failed to send invoice" };
   }
 };
+
+export const createShippingLabel = (id, data, router) => async () => {
+  try {
+    return await Api("post", `shipping/label/${id}`, data || {}, router);
+  } catch (err) {
+    return { status: false, message: err?.message || "Failed to create shipping label" };
+  }
+};
+
+export const fetchShippingLabel = (id, router) => async () => {
+  try {
+    return await Api("get", `shipping/label/${id}`, "", router);
+  } catch (err) {
+    return { status: false, message: err?.message || "Failed to fetch shipping label" };
+  }
+};

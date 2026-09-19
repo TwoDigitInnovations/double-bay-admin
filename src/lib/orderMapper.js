@@ -15,6 +15,7 @@ const PAYMENT_LABELS = {
   netbanking: "Net banking",
   wallet: "Wallet",
   stripe: "Stripe",
+  afterpay: "Afterpay",
 };
 
 /** Order amounts render in the currency the order was placed in. */

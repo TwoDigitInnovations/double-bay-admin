@@ -2458,6 +2458,27 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
                   </div>
                 </div>
 
+                {/* Dimensions — used for live Australia Post shipping quotes */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    Dimensions (cm, for shipping quotes)
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {["length", "width", "height"].map((dim) => (
+                      <input
+                        key={dim}
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        value={form.dimensions[dim]}
+                        onChange={(e) => setDim(dim, e.target.value)}
+                        placeholder={dim.charAt(0).toUpperCase() + dim.slice(1)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 outline-none focus:ring-1 focus:ring-gray-400"
+                      />
+                    ))}
+                  </div>
+                </div>
+
                 {/* Customs information */}
                 <div className="border-t border-gray-100 pt-3">
                   <button
