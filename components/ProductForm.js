@@ -1787,7 +1787,7 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
       age: product.age || "",
       tags: product.tags || [],
       weight: product.weight ?? "",
-      weightUnit: "kg",
+      weightUnit: product.weightUnit || "kg",
       dimensions: {
         length: product.dimensions?.length ?? "",
         width: product.dimensions?.width ?? "",
@@ -1963,7 +1963,10 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
       fd.append("countryOfOrigin", form.countryOfOrigin);
     if (form.hsCode) fd.append("hsCode", form.hsCode);
     fd.append("package", JSON.stringify(form.package));
-    if (form.weight !== "") fd.append("weight", form.weight);
+    if (form.weight !== "") {
+      fd.append("weight", form.weight);
+      fd.append("weightUnit", form.weightUnit || "kg");
+    }
     fd.append(
       "dimensions",
       JSON.stringify({
@@ -2430,7 +2433,7 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Product weight
+                      Product weight (for shipping quotes)
                     </label>
                     <input
                       type="number"

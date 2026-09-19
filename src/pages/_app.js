@@ -44,7 +44,7 @@ function InnerApp({ Component, pageProps }) {
     <>
       <Loader open={open} />
 
-      <div className="fixed right-5 top-20 min-w-max z-50">
+      <div className="fixed right-5 top-20 z-50 w-max max-w-[min(28rem,calc(100vw-2.5rem))]">
         {!!toast.message && (
           <Toaster type={toast.type} message={toast.message} />
         )}

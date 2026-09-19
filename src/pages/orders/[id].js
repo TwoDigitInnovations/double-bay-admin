@@ -1200,17 +1200,17 @@ function OrderDetail({ toaster }) {
             icon={Package}
             bodyClass="p-4 pt-2"
             action={
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => setModal("product")}
-                  className="flex items-center gap-1 text-sm font-medium text-gray-700 border border-gray-300 bg-white hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                  className="flex items-center gap-1 whitespace-nowrap text-sm font-medium text-gray-700 border border-gray-300 bg-white hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
                 >
                   <Plus size={14} />
                   Add product
                 </button>
                 <button
                   onClick={() => setModal("custom")}
-                  className="flex items-center gap-1 text-sm font-medium text-gray-700 border border-gray-300 bg-white hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                  className="flex items-center gap-1 whitespace-nowrap text-sm font-medium text-gray-700 border border-gray-300 bg-white hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
                 >
                   <Plus size={14} />
                   Add custom item
@@ -1257,7 +1257,7 @@ function OrderDetail({ toaster }) {
                 return (
                   <div
                     key={item.key}
-                    className="flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-3"
+                    className="flex flex-wrap sm:flex-nowrap items-center gap-x-3 gap-y-2 sm:gap-4 px-3 sm:px-4 py-3"
                   >
                     {item.image ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -1320,21 +1320,26 @@ function OrderDetail({ toaster }) {
                       )}
                     </div>
 
-                    <input
-                      type="number"
-                      min={1}
-                      value={item.quantity}
-                      onChange={(e) =>
-                        updateLine(item.key, {
-                          quantity: Math.max(1, parseInt(e.target.value, 10) || 1),
-                        })
-                      }
-                      className="w-16 h-9 shrink-0 rounded-lg border border-gray-300 bg-white text-sm text-center text-gray-800 outline-none focus:border-gray-900"
-                    />
+                    {/* Mobile: quantity + line total sit on their own row under
+                        the product name. Desktop: the wrapper disappears
+                        (sm:contents) and they stay inline in the row. */}
+                    <div className="order-last w-full flex items-center justify-between gap-3 pl-14 sm:order-none sm:w-auto sm:pl-0 sm:contents">
+                      <input
+                        type="number"
+                        min={1}
+                        value={item.quantity}
+                        onChange={(e) =>
+                          updateLine(item.key, {
+                            quantity: Math.max(1, parseInt(e.target.value, 10) || 1),
+                          })
+                        }
+                        className="w-16 h-9 shrink-0 rounded-lg border border-gray-300 bg-white text-sm text-center text-gray-800 outline-none focus:border-gray-900"
+                      />
 
-                    <span className="w-20 sm:w-24 text-sm font-medium text-gray-900 text-right shrink-0">
-                      {money(item.price * item.quantity)}
-                    </span>
+                      <span className="text-sm font-medium text-gray-900 text-right shrink-0 sm:w-24">
+                        {money(item.price * item.quantity)}
+                      </span>
+                    </div>
 
                     <button
                       type="button"
@@ -1536,17 +1541,27 @@ function OrderDetail({ toaster }) {
                 <span className="block text-xs font-medium text-gray-600 mb-1">
                   Payment status
                 </span>
+                {/* "Paid" is set only by the payment process (Stripe / Afterpay),
+                    never by hand, and an already-paid order is locked. */}
                 <select
                   value={draft.paymentStatus}
                   onChange={(e) => patch({ paymentStatus: e.target.value })}
-                  className={`${inputClass} bg-white capitalize`}
+                  disabled={raw.paymentStatus === "paid"}
+                  className={`${inputClass} bg-white capitalize disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed`}
                 >
-                  {PAYMENT_STATUSES.map((status) => (
+                  {PAYMENT_STATUSES.filter(
+                    (status) => status !== "paid" || raw.paymentStatus === "paid",
+                  ).map((status) => (
                     <option key={status} value={status}>
                       {status.charAt(0).toUpperCase() + status.slice(1)}
                     </option>
                   ))}
                 </select>
+                {raw.paymentStatus === "paid" && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Paid orders can&apos;t be changed manually — use a refund.
+                  </p>
+                )}
               </label>
               <label className="block">
                 <span className="block text-xs font-medium text-gray-600 mb-1">
