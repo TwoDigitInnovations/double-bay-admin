@@ -154,6 +154,13 @@ function Table({
   onNextPage,
   onPrevPage,
   disableClientPagination,
+  // Opt-in: when the caller passes onSearchChange, the search box becomes a
+  // controlled input reporting to the caller (e.g. to hit a backend `search`
+  // param) instead of react-table's built-in client-side globalFilter, which
+  // only ever filters within the current page of already-fetched rows.
+  searchValue,
+  onSearchChange,
+  searchPlaceholder = "Search and filter",
 }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [sortMenuOpen, setSortMenuOpen] = useState(false);
@@ -298,14 +305,22 @@ function Table({
           <div className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-1 flex-1 max-w-xs">
             <Search size={14} className="text-gray-400 shrink-0" />
             <input
-              value={globalFilter || ""}
-              onChange={(e) => setGlobalFilter(e.target.value || undefined)}
-              placeholder="Search and filter"
+              value={(onSearchChange ? searchValue : globalFilter) || ""}
+              onChange={(e) =>
+                onSearchChange
+                  ? onSearchChange(e.target.value)
+                  : setGlobalFilter(e.target.value || undefined)
+              }
+              placeholder={searchPlaceholder}
               className="bg-transparent text-sm text-gray-700 outline-none placeholder-gray-400 w-full min-w-0"
             />
-            {globalFilter && (
-              <button onClick={() => setGlobalFilter(undefined)}>
-                <X size={12} className="text-gray-400 hover:text-gray-600" />
+            {(onSearchChange ? searchValue : globalFilter) && (
+              <button
+                onClick={() =>
+                  onSearchChange ? onSearchChange("") : setGlobalFilter(undefined)
+                }
+              >
+                <X size={12} className="text-gray-400 hover:text-gray-600 cursor-pointer" />
               </button>
             )}
           </div>

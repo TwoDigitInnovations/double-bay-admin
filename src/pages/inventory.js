@@ -206,7 +206,7 @@ function Inventory() {
   const { products, loading } = useSelector((state) => state.product);
 
   useEffect(() => {
-    dispatch(fetchProducts(router));
+    dispatch(fetchProducts({}, router));
   }, [dispatch]);
 
   const handleDelete = async (id) => {

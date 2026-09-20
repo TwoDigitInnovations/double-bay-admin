@@ -1,10 +1,12 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Download, Plus, Tag, Trash2, Upload } from "lucide-react";
 import isAuth from "@/components/isAuth";
 import Table, { AvatarCell, StatusPill } from "@/components/table";
 import { deleteProductById, fetchProducts } from "@/redux/actions/productActions";
 import { useRouter } from "next/router";
+
+const PAGE_SIZE = 20;
 
 // ── CSV Export utility ───────────────────────────────────────────────────────
 
@@ -208,11 +210,27 @@ function EmptyState({ router }) {
 
 function Products() {
   const dispatch = useDispatch();
-  const { products, loading } = useSelector((state) => state.product);
+  const { products, loading, total } = useSelector((state) => state.product);
   const router = useRouter();
+
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  // Debounce the search box so every keystroke doesn't hit the backend.
   useEffect(() => {
-    dispatch(fetchProducts(router));
-  }, [dispatch]);
+    const t = setTimeout(() => {
+      setSearch(searchInput.trim());
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  useEffect(() => {
+    dispatch(fetchProducts({ page, limit: PAGE_SIZE, search }, router));
+  }, [dispatch, page, search]);
 
   const handleDelete = async (id) => {
     if (!id) return;
@@ -261,7 +279,7 @@ function Products() {
           <Tag size={18} className="text-gray-700" />
           Products
         </h1>
-        {products.length > 0 && (
+        {total > 0 && (
           <div className="flex items-center gap-2">
             <button
               onClick={handleExport}
@@ -293,13 +311,21 @@ function Products() {
         <div className="bg-white rounded-xl border border-gray-200 flex items-center justify-center h-64">
           <div className="w-6 h-6 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
         </div>
-      ) : products.length === 0 ? (
+      ) : total === 0 && !search ? (
         <EmptyState router={router} />
       ) : (
         <Table
           columns={columns}
           data={products}
           onRowClick={(row) => router.push(`/products/${row._id}`)}
+          total={total}
+          currentPage={page}
+          totalPages={totalPages}
+          onNextPage={() => setPage((p) => Math.min(p + 1, totalPages))}
+          onPrevPage={() => setPage((p) => Math.max(p - 1, 1))}
+          disableClientPagination
+          searchValue={searchInput}
+          onSearchChange={setSearchInput}
         />
       )}
     </div>

@@ -24,7 +24,7 @@ export function Card({ title, icon: Icon, action, children, bodyClass = "p-4" })
   return (
     <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
       {title && (
-        <div className="flex items-center justify-between gap-3 px-4 pt-4 pb-1">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 pt-4 pb-1">
           <h2 className="flex items-center gap-2 text-sm font-semibold text-gray-900">
             {Icon && <Icon size={15} className="text-gray-500" />}
             {title}

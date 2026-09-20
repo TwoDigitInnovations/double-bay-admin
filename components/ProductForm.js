@@ -1787,7 +1787,7 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
       age: product.age || "",
       tags: product.tags || [],
       weight: product.weight ?? "",
-      weightUnit: "kg",
+      weightUnit: product.weightUnit || "kg",
       dimensions: {
         length: product.dimensions?.length ?? "",
         width: product.dimensions?.width ?? "",
@@ -1963,7 +1963,10 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
       fd.append("countryOfOrigin", form.countryOfOrigin);
     if (form.hsCode) fd.append("hsCode", form.hsCode);
     fd.append("package", JSON.stringify(form.package));
-    if (form.weight !== "") fd.append("weight", form.weight);
+    if (form.weight !== "") {
+      fd.append("weight", form.weight);
+      fd.append("weightUnit", form.weightUnit || "kg");
+    }
     fd.append(
       "dimensions",
       JSON.stringify({
@@ -2430,7 +2433,7 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-medium text-gray-600 mb-1">
-                      Product weight
+                      Product weight (for shipping quotes)
                     </label>
                     <input
                       type="number"
@@ -2455,6 +2458,27 @@ export default function ProductForm({ mode = "add", id, toaster, loader }) {
                         <option key={u}>{u}</option>
                       ))}
                     </select>
+                  </div>
+                </div>
+
+                {/* Dimensions — used for live Australia Post shipping quotes */}
+                <div>
+                  <label className="block text-xs font-medium text-gray-600 mb-1">
+                    Dimensions (cm, for shipping quotes)
+                  </label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {["length", "width", "height"].map((dim) => (
+                      <input
+                        key={dim}
+                        type="number"
+                        min="0"
+                        step="0.1"
+                        value={form.dimensions[dim]}
+                        onChange={(e) => setDim(dim, e.target.value)}
+                        placeholder={dim.charAt(0).toUpperCase() + dim.slice(1)}
+                        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm text-gray-800 outline-none focus:ring-1 focus:ring-gray-400"
+                      />
+                    ))}
                   </div>
                 </div>
 

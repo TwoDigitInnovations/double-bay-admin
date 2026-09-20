@@ -10,13 +10,18 @@ import {
   deleteProduct,
 } from "../slices/productSlice";
 
-export const fetchProducts = (router) => async (dispatch) => {
+export const fetchProducts = (params = {}, router) => async (dispatch) => {
   try {
     dispatch(setLoading(true));
-    const res = await Api("get", "products", "", router);
+    const { page = 1, limit = 20, search, status } = params;
+    const query = new URLSearchParams({ page: String(page), limit: String(limit) });
+    if (search) query.set("search", search);
+    if (status) query.set("status", status);
+
+    const res = await Api("get", `products?${query.toString()}`, "", router);
     if (res?.status) {
-      dispatch(setProducts(res.data?.data || res.data || []));
-      dispatch(setTotal(res.data?.total || res.data?.length || 0));
+      dispatch(setProducts(res.data?.data || []));
+      dispatch(setTotal(res.data?.pagination?.total || 0));
     }
     return res;
   } catch (err) {

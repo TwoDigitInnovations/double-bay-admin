@@ -49,6 +49,8 @@ import {
 } from "@/components/orderDetail";
 import {
   addOrderComment,
+  createShippingLabel,
+  fetchShippingLabel,
   deleteOrderById,
   deleteOrderComment,
   duplicateOrderById,
@@ -75,7 +77,7 @@ const ORDER_STATUSES = [
 
 const PAYMENT_STATUSES = ["pending", "paid", "failed", "refunded"];
 
-const PAYMENT_METHODS = ["COD", "UPI", "card", "netbanking", "wallet", "stripe"];
+const PAYMENT_METHODS = ["COD", "UPI", "card", "netbanking", "wallet", "stripe", "afterpay"];
 
 const STATUS_ICONS = {
   placed: ShoppingBag,
@@ -612,6 +614,7 @@ function OrderDetail({ toaster }) {
   const [modal, setModal] = useState(null);
   const [saving, setSaving] = useState(false);
   const [savingNotes, setSavingNotes] = useState(false);
+  const [creatingLabel, setCreatingLabel] = useState(false);
   const [posting, setPosting] = useState(false);
   const [sending, setSending] = useState(false);
   const [confirm, setConfirm] = useState(null);
@@ -724,6 +727,55 @@ function OrderDetail({ toaster }) {
   const reload = () => {
     if (isDirty) keepDraftRef.current = draft;
     return dispatch(fetchOrderById(id, router));
+  };
+
+  /** Books a real, billable Australia Post shipment. The backend saves the
+   *  tracking number, carrier, tracking link and label PDF link on the order,
+   *  so reloading is all that is needed to show them in the form. */
+  const handleCreateLabel = async () => {
+    if (creatingLabel) return;
+    setCreatingLabel(true);
+    try {
+      const res = await dispatch(createShippingLabel(id, {}, router));
+      const result = res?.data?.data;
+      if (res?.status && result?.trackingNumber) {
+        toaster?.({
+          type: result.warning ? "warning" : "success",
+          message: result.warning
+            ? `Tracking ${result.trackingNumber} created. ${result.warning}`
+            : `Label created — tracking ${result.trackingNumber}`,
+        });
+        await reload();
+      } else {
+        toaster?.({
+          type: "error",
+          message: res?.message || "Failed to create shipping label",
+        });
+      }
+    } finally {
+      setCreatingLabel(false);
+    }
+  };
+
+  /** Re-fetches the label PDF link (Australia Post's signed links expire). */
+  const handleOpenLabel = async () => {
+    if (creatingLabel) return;
+    setCreatingLabel(true);
+    try {
+      const res = await dispatch(fetchShippingLabel(id, router));
+      const url = res?.data?.data?.labelUrl;
+      if (res?.status && url) {
+        await reload();
+        window.open(url, "_blank", "noopener,noreferrer");
+      } else {
+        toaster?.({
+          type: "error",
+          message: res?.message || "Label is not ready yet — try again in a moment",
+        });
+      }
+    } finally {
+      setCreatingLabel(false);
+    }
   };
 
   const notify = (res, fallback, success) => {
@@ -1148,17 +1200,17 @@ function OrderDetail({ toaster }) {
             icon={Package}
             bodyClass="p-4 pt-2"
             action={
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   onClick={() => setModal("product")}
-                  className="flex items-center gap-1 text-sm font-medium text-gray-700 border border-gray-300 bg-white hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                  className="flex items-center gap-1 whitespace-nowrap text-sm font-medium text-gray-700 border border-gray-300 bg-white hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
                 >
                   <Plus size={14} />
                   Add product
                 </button>
                 <button
                   onClick={() => setModal("custom")}
-                  className="flex items-center gap-1 text-sm font-medium text-gray-700 border border-gray-300 bg-white hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                  className="flex items-center gap-1 whitespace-nowrap text-sm font-medium text-gray-700 border border-gray-300 bg-white hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
                 >
                   <Plus size={14} />
                   Add custom item
@@ -1205,7 +1257,7 @@ function OrderDetail({ toaster }) {
                 return (
                   <div
                     key={item.key}
-                    className="flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-3"
+                    className="flex flex-wrap sm:flex-nowrap items-center gap-x-3 gap-y-2 sm:gap-4 px-3 sm:px-4 py-3"
                   >
                     {item.image ? (
                       // eslint-disable-next-line @next/next/no-img-element
@@ -1268,21 +1320,26 @@ function OrderDetail({ toaster }) {
                       )}
                     </div>
 
-                    <input
-                      type="number"
-                      min={1}
-                      value={item.quantity}
-                      onChange={(e) =>
-                        updateLine(item.key, {
-                          quantity: Math.max(1, parseInt(e.target.value, 10) || 1),
-                        })
-                      }
-                      className="w-16 h-9 shrink-0 rounded-lg border border-gray-300 bg-white text-sm text-center text-gray-800 outline-none focus:border-gray-900"
-                    />
+                    {/* Mobile: quantity + line total sit on their own row under
+                        the product name. Desktop: the wrapper disappears
+                        (sm:contents) and they stay inline in the row. */}
+                    <div className="order-last w-full flex items-center justify-between gap-3 pl-14 sm:order-none sm:w-auto sm:pl-0 sm:contents">
+                      <input
+                        type="number"
+                        min={1}
+                        value={item.quantity}
+                        onChange={(e) =>
+                          updateLine(item.key, {
+                            quantity: Math.max(1, parseInt(e.target.value, 10) || 1),
+                          })
+                        }
+                        className="w-16 h-9 shrink-0 rounded-lg border border-gray-300 bg-white text-sm text-center text-gray-800 outline-none focus:border-gray-900"
+                      />
 
-                    <span className="w-20 sm:w-24 text-sm font-medium text-gray-900 text-right shrink-0">
-                      {money(item.price * item.quantity)}
-                    </span>
+                      <span className="text-sm font-medium text-gray-900 text-right shrink-0 sm:w-24">
+                        {money(item.price * item.quantity)}
+                      </span>
+                    </div>
 
                     <button
                       type="button"
@@ -1424,6 +1481,45 @@ function OrderDetail({ toaster }) {
 
           {/* Fulfillment */}
           <Card title="Fulfillment" icon={Truck} bodyClass="p-4 pt-2">
+            <div className="mb-3 pb-3 border-b border-gray-100">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleCreateLabel}
+                  disabled={
+                    creatingLabel ||
+                    !!raw.tracking?.trackingNumber ||
+                    raw.paymentStatus !== "paid" ||
+                    ["cancelled", "returned"].includes(raw.orderStatus)
+                  }
+                  className="inline-flex items-center gap-2 rounded-lg bg-gray-900 px-3 py-1.5 text-xs font-semibold text-white hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Package size={14} />
+                  {creatingLabel ? "Working…" : "Create label (Australia Post)"}
+                </button>
+                {raw.tracking?.shipmentId && (
+                  <button
+                    type="button"
+                    onClick={handleOpenLabel}
+                    disabled={creatingLabel}
+                    className="inline-flex items-center gap-2 rounded-lg border border-gray-300 px-3 py-1.5 text-xs font-semibold text-gray-800 hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    <ExternalLink size={14} />
+                    Print label (PDF)
+                  </button>
+                )}
+              </div>
+              <p className="text-xs text-gray-500 mt-1.5 max-w-md">
+                Books a real Australia Post shipment, then saves the tracking number,
+                carrier, tracking link and label PDF on this order. This is billable —
+                only run it once, when the order is ready to send.
+                {raw.paymentStatus !== "paid" && !raw.tracking?.trackingNumber && (
+                  <span className="block text-amber-600 mt-1">
+                    Payment must be marked &quot;Paid&quot; first.
+                  </span>
+                )}
+              </p>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <label className="block">
                 <span className="block text-xs font-medium text-gray-600 mb-1">
@@ -1445,17 +1541,27 @@ function OrderDetail({ toaster }) {
                 <span className="block text-xs font-medium text-gray-600 mb-1">
                   Payment status
                 </span>
+                {/* "Paid" is set only by the payment process (Stripe / Afterpay),
+                    never by hand, and an already-paid order is locked. */}
                 <select
                   value={draft.paymentStatus}
                   onChange={(e) => patch({ paymentStatus: e.target.value })}
-                  className={`${inputClass} bg-white capitalize`}
+                  disabled={raw.paymentStatus === "paid"}
+                  className={`${inputClass} bg-white capitalize disabled:bg-gray-50 disabled:text-gray-500 disabled:cursor-not-allowed`}
                 >
-                  {PAYMENT_STATUSES.map((status) => (
+                  {PAYMENT_STATUSES.filter(
+                    (status) => status !== "paid" || raw.paymentStatus === "paid",
+                  ).map((status) => (
                     <option key={status} value={status}>
                       {status.charAt(0).toUpperCase() + status.slice(1)}
                     </option>
                   ))}
                 </select>
+                {raw.paymentStatus === "paid" && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Paid orders can&apos;t be changed manually — use a refund.
+                  </p>
+                )}
               </label>
               <label className="block">
                 <span className="block text-xs font-medium text-gray-600 mb-1">
@@ -1502,7 +1608,7 @@ function OrderDetail({ toaster }) {
                       tracking: { ...draft.tracking, partner: e.target.value },
                     })
                   }
-                  placeholder="Delhivery, Blue Dart…"
+                  placeholder="Australia Post, StarTrack…"
                   className={inputClass}
                 />
               </label>
