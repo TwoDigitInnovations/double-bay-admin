@@ -623,6 +623,8 @@ function OrderDetail({ toaster }) {
   // Edits in flight survive the re-fetch that follows a note or comment.
   const keepDraftRef = useRef(null);
   const [unlocked, setUnlocked] = useState(() => new Set());
+  // Line items stay read-only until "Edit products" is picked from the menu.
+  const [editingItems, setEditingItems] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -645,6 +647,7 @@ function OrderDetail({ toaster }) {
     }
     setDraft(fresh);
     setUnlocked(new Set());
+    setEditingItems(false);
   }, [order]);
 
   const items = draft?.items || [];
@@ -808,6 +811,7 @@ function OrderDetail({ toaster }) {
     setDraft(next);
     setBaseline(serializeDraft(next));
     setUnlocked(new Set());
+    setEditingItems(false);
   };
 
   // ── Leaving with unsaved edits ────────────────────────────────────────────
@@ -1201,20 +1205,24 @@ function OrderDetail({ toaster }) {
             bodyClass="p-4 pt-2"
             action={
               <div className="flex flex-wrap items-center gap-2">
-                <button
-                  onClick={() => setModal("product")}
-                  className="flex items-center gap-1 whitespace-nowrap text-sm font-medium text-gray-700 border border-gray-300 bg-white hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
-                >
-                  <Plus size={14} />
-                  Add product
-                </button>
-                <button
-                  onClick={() => setModal("custom")}
-                  className="flex items-center gap-1 whitespace-nowrap text-sm font-medium text-gray-700 border border-gray-300 bg-white hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
-                >
-                  <Plus size={14} />
-                  Add custom item
-                </button>
+                {editingItems && (
+                  <>
+                    <button
+                      onClick={() => setModal("product")}
+                      className="flex items-center gap-1 whitespace-nowrap text-sm font-medium text-gray-700 border border-gray-300 bg-white hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                    >
+                      <Plus size={14} />
+                      Add product
+                    </button>
+                    <button
+                      onClick={() => setModal("custom")}
+                      className="flex items-center gap-1 whitespace-nowrap text-sm font-medium text-gray-700 border border-gray-300 bg-white hover:bg-gray-50 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+                    >
+                      <Plus size={14} />
+                      Add custom item
+                    </button>
+                  </>
+                )}
                 <DropdownMenu
                   trigger={
                     <button className="p-1.5 rounded-lg text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors cursor-pointer">
@@ -1223,7 +1231,13 @@ function OrderDetail({ toaster }) {
                   }
                   items={[
                     {
+                      label: "Edit products",
+                      hidden: editingItems,
+                      onClick: () => setEditingItems(true),
+                    },
+                    {
                       label: "Reset line items",
+                      hidden: !editingItems,
                       onClick: () => patch({ items: buildDraft(raw).items }),
                     },
                     {
@@ -1253,7 +1267,7 @@ function OrderDetail({ toaster }) {
                 </p>
               )}
               {items.map((item) => {
-                const editable = unlocked.has(item.key);
+                const editable = editingItems && unlocked.has(item.key);
                 return (
                   <div
                     key={item.key}
@@ -1291,15 +1305,17 @@ function OrderDetail({ toaster }) {
                     </div>
 
                     <div className="hidden sm:flex items-center gap-1.5 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => toggleLock(item.key)}
-                        aria-label={editable ? "Lock price" : "Edit price"}
-                        title={editable ? "Lock price" : "Edit price"}
-                        className="text-gray-400 hover:text-gray-700 transition-colors cursor-pointer"
-                      >
-                        {editable ? <LockOpen size={14} /> : <Lock size={14} />}
-                      </button>
+                      {editingItems && (
+                        <button
+                          type="button"
+                          onClick={() => toggleLock(item.key)}
+                          aria-label={editable ? "Lock price" : "Edit price"}
+                          title={editable ? "Lock price" : "Edit price"}
+                          className="text-gray-400 hover:text-gray-700 transition-colors cursor-pointer"
+                        >
+                          {editable ? <LockOpen size={14} /> : <Lock size={14} />}
+                        </button>
+                      )}
                       {editable ? (
                         <input
                           type="number"
@@ -1324,31 +1340,39 @@ function OrderDetail({ toaster }) {
                         the product name. Desktop: the wrapper disappears
                         (sm:contents) and they stay inline in the row. */}
                     <div className="order-last w-full flex items-center justify-between gap-3 pl-14 sm:order-none sm:w-auto sm:pl-0 sm:contents">
-                      <input
-                        type="number"
-                        min={1}
-                        value={item.quantity}
-                        onChange={(e) =>
-                          updateLine(item.key, {
-                            quantity: Math.max(1, parseInt(e.target.value, 10) || 1),
-                          })
-                        }
-                        className="w-16 h-9 shrink-0 rounded-lg border border-gray-300 bg-white text-sm text-center text-gray-800 outline-none focus:border-gray-900"
-                      />
+                      {editingItems ? (
+                        <input
+                          type="number"
+                          min={1}
+                          value={item.quantity}
+                          onChange={(e) =>
+                            updateLine(item.key, {
+                              quantity: Math.max(1, parseInt(e.target.value, 10) || 1),
+                            })
+                          }
+                          className="w-16 h-9 shrink-0 rounded-lg border border-gray-300 bg-white text-sm text-center text-gray-800 outline-none focus:border-gray-900"
+                        />
+                      ) : (
+                        <span className="w-16 shrink-0 text-sm text-center text-gray-700">
+                          × {item.quantity}
+                        </span>
+                      )}
 
                       <span className="text-sm font-medium text-gray-900 text-right shrink-0 sm:w-24">
                         {money(item.price * item.quantity)}
                       </span>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => removeLine(item.key)}
-                      aria-label={`Remove ${item.name}`}
-                      className="text-gray-400 hover:text-red-600 transition-colors shrink-0 cursor-pointer"
-                    >
-                      <X size={15} />
-                    </button>
+                    {editingItems && (
+                      <button
+                        type="button"
+                        onClick={() => removeLine(item.key)}
+                        aria-label={`Remove ${item.name}`}
+                        className="text-gray-400 hover:text-red-600 transition-colors shrink-0 cursor-pointer"
+                      >
+                        <X size={15} />
+                      </button>
+                    )}
                   </div>
                 );
               })}
@@ -1866,9 +1890,10 @@ function OrderDetail({ toaster }) {
 
       {/* Closes the page while edits are pending. The page stays fully usable
           so several changes can be saved or discarded together. */}
-      {isDirty && (
+      {(isDirty || editingItems) && (
         <UnsavedChangesBar
           saving={saving}
+          dirty={isDirty}
           blocked={items.length === 0}
           onDiscard={handleDiscard}
           onSave={handleSave}
