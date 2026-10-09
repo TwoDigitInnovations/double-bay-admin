@@ -1,9 +1,6 @@
 import axios from "axios";
-// API base URL comes from NEXT_PUBLIC_API_URL (e.g. http://localhost:8080 in
-// .env.local); falls back to the live API. Trailing slash is normalised.
-const ConstantsUrl = `${(
-  process.env.NEXT_PUBLIC_API_URL || "https://doublebayapi.2digitinnovations.com"
-).replace(/\/+$/, "")}/`;
+// const ConstantsUrl = "http://localhost:8001/";
+const ConstantsUrl = "https://doublebayapi.2digitinnovations.com/";
 
 function Api(method, url, data, router) {
   return new Promise(function (resolve, reject) {

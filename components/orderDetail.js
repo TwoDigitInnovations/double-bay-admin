@@ -1186,14 +1186,20 @@ export function SendInvoiceModal({
  * interactive so several changes can be batched and then applied — or
  * dropped — in one go.
  */
-export function UnsavedChangesBar({ saving, blocked, onDiscard, onSave }) {
+export function UnsavedChangesBar({
+  saving,
+  blocked,
+  dirty = true,
+  onDiscard,
+  onSave,
+}) {
   return (
     <div className="mt-5">
       <div className="w-full bg-white rounded-xl border border-gray-200 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
           <p className="flex items-center gap-2 text-sm font-medium text-gray-900">
             <CircleAlert size={16} className="text-amber-500 shrink-0" />
-            Unsaved changes
+            {dirty ? "Unsaved changes" : "No changes yet"}
           </p>
           <div className="flex items-center gap-2">
             <button
@@ -1202,12 +1208,12 @@ export function UnsavedChangesBar({ saving, blocked, onDiscard, onSave }) {
               disabled={saving}
               className="text-sm font-medium text-gray-600 hover:text-gray-900 bg-gray-100 hover:bg-gray-200 disabled:opacity-40 px-4 py-2 rounded-lg transition-colors cursor-pointer"
             >
-              Discard
+              {dirty ? "Discard" : "Cancel"}
             </button>
             <button
               type="button"
               onClick={onSave}
-              disabled={saving || blocked}
+              disabled={saving || blocked || !dirty}
               className="bg-gray-900 hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium px-5 py-2 rounded-lg transition-colors cursor-pointer"
             >
               {saving ? "Saving…" : "Save"}
